@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TaniTrade AI - Voice Input</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-high": "#e9e8e5",
+              "surface-container-low": "#f4f3f1",
+              "inverse-on-surface": "#f2f1ee",
+              "on-background": "#1a1c1a",
+              "on-primary-container": "#c2e4b4",
+              "surface-tint": "#496640",
+              "on-secondary-fixed-variant": "#3e4c16",
+              "secondary": "#56642b",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#cba72f",
+              "on-secondary-container": "#5a682f",
+              "primary": "#334f2b",
+              "primary-container": "#4a6741",
+              "surface-bright": "#faf9f6",
+              "surface-variant": "#e3e2e0",
+              "on-tertiary-container": "#4e3d00",
+              "secondary-fixed": "#d9eaa3",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#324e2a",
+              "error": "#ba1a1a",
+              "on-surface-variant": "#434840",
+              "background": "#faf9f6",
+              "primary-fixed": "#caecbc",
+              "tertiary-fixed": "#ffe088",
+              "inverse-primary": "#afd0a1",
+              "surface-container": "#efeeeb",
+              "on-surface": "#1a1c1a",
+              "on-tertiary-fixed": "#241a00",
+              "secondary-fixed-dim": "#bdce89",
+              "tertiary-fixed-dim": "#e9c349",
+              "surface-dim": "#dbdad7",
+              "on-secondary": "#ffffff",
+              "surface-container-highest": "#e3e2e0",
+              "outline-variant": "#c3c8bd",
+              "on-primary-fixed": "#062104",
+              "inverse-surface": "#2f312f",
+              "outline": "#73796f",
+              "on-secondary-fixed": "#161f00",
+              "on-error-container": "#93000a",
+              "surface": "#faf9f6",
+              "secondary-container": "#d6e7a1",
+              "tertiary": "#735c00",
+              "primary-fixed-dim": "#afd0a1",
+              "on-tertiary-fixed-variant": "#574500"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+            animation: {
+              'pulse-slow': 'pulse-custom 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'ripple-slow': 'ripple 3s linear infinite',
+            },
+            keyframes: {
+              'pulse-custom': {
+                '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                '50%': { opacity: .8, transform: 'scale(1.05)' },
+              },
+              'ripple': {
+                '0%': { boxShadow: '0 0 0 0 rgba(74, 103, 65, 0.4)' },
+                '70%': { boxShadow: '0 0 0 20px rgba(74, 103, 65, 0)' },
+                '100%': { boxShadow: '0 0 0 0 rgba(74, 103, 65, 0)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .glow-edge {
+        box-shadow: 0 0 20px rgba(74, 103, 65, 0.1);
+      }
+      .voice-active {
+        animation: ripple 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      }
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#FAF9F6]/90 backdrop-blur-md">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden ring-2 ring-primary-container/20">
+<img alt="User profile photo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAexMsbu0p7B5HPpUf1nCNqj3V2ZiF9jibKmZrVn4W_u2tCyP0f7R-XRkLw8YI3QKBvE7o3iP1xhZqFu6O2TE0fpTHDnB5FlvCdKYgH4qGsjSZwcWw6BCVom19Cd525ugZL5JmEyoFux7-shzgyLHqRaNMOnNbc1WkgEpd9traIns3dDhc-O5u_cyy20wsWK5pKBYhb84OlR_wo5kIRUxTjUhoDZ6YE7PHlQwECevq_K7-mcU4M9m1kXMHXtNRXVKhnVr-Pf-Qc9-c"/>
+</div>
+<h1 class="font-headline font-black text-[#334F2B] tracking-tighter text-lg">TaniTrade AI</h1>
+</div>
+<button class="text-[#334F2B] hover:opacity-80 transition-opacity p-2 bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined text-xl" data-icon="location_on">location_on</span>
+</button>
+</div>
+</header>
+<main class="max-w-md mx-auto px-6 pt-6">
+<!-- Context Section -->
+<section class="mb-8 text-center">
+<h2 class="font-headline font-extrabold text-[32px] leading-tight text-primary tracking-tight mb-3">What's on your mind?</h2>
+<div class="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<p class="text-sm font-semibold text-primary font-label uppercase tracking-widest">Listening</p>
+</div>
+</section>
+<!-- Central Voice Card -->
+<div class="relative mb-10">
+<div class="glass-card glow-edge rounded-full aspect-square flex flex-col items-center justify-center border border-white/60 relative overflow-hidden mx-auto max-w-[340px]">
+<!-- Dynamic AI Aura -->
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary-container/5 blur-[40px] rounded-full"></div>
+</div>
+<!-- Microphone Button with Pulse -->
+<div class="relative z-10">
+<div class="absolute -inset-8 bg-primary-container/15 rounded-full blur-2xl animate-pulse"></div>
+<button class="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white shadow-xl relative voice-active active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'wght' 500, 'FILL' 1;">mic</span>
+</button>
+</div>
+<div class="mt-8 text-center relative z-10 px-8">
+<p class="text-on-surface font-semibold text-lg leading-snug">Speak now to find local trades...</p>
+</div>
+</div>
+</div>
+<!-- Hint Card -->
+<div class="mb-8 bg-white/60 backdrop-blur-md rounded-full px-6 py-4 flex gap-3 items-center border border-primary/10 shadow-sm">
+<div class="bg-tertiary-container/20 p-2 rounded-full flex-shrink-0">
+<span class="material-symbols-outlined text-tertiary text-xl" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<p class="text-sm font-medium text-on-surface leading-tight">
+                Try: <span class="text-primary italic">"I have 50kg of surplus fertilizer"</span>
+</p>
+</div>
+<!-- Fallback Text Input -->
+<div class="mb-8">
+<div class="relative">
+<input class="w-full h-14 pl-6 pr-14 rounded-full bg-surface-container-highest/50 border-none focus:ring-2 focus:ring-primary/20 transition-all font-body text-on-surface placeholder:text-on-surface-variant/60" placeholder="Type message..." type="text"/>
+<button class="absolute right-2 top-2 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Example Prompt Chips -->
+<section class="mb-10 overflow-x-auto no-scrollbar">
+<div class="flex gap-2 min-w-max pb-2">
+<button class="px-5 py-2.5 rounded-full bg-surface-container-lowest border border-primary/10 hover:border-primary/30 transition-all text-sm font-semibold text-primary shadow-sm">
+                    “I need pesticide”
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-surface-container-lowest border border-primary/10 hover:border-primary/30 transition-all text-sm font-semibold text-primary shadow-sm">
+                    “What can I trade for seeds?”
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-surface-container-lowest border border-primary/10 hover:border-primary/30 transition-all text-sm font-semibold text-primary shadow-sm">
+                    “Planting paddy”
+                </button>
+</div>
+</section>
+<!-- Primary CTA -->
+<button class="w-full bg-primary text-white py-5 rounded-full font-headline font-extrabold text-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 group">
+<span>Analyze &amp; Find Match</span>
+<span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-variation-settings: 'FILL' 1;">temp_preferences_custom</span>
+</button>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-[#FAF9F6]/90 backdrop-blur-xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)] rounded-t-[2.5rem] border-t border-primary/5">
+<a class="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary text-white rounded-full px-6 py-2.5 shadow-lg shadow-primary/20 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="handshake" style="font-variation-settings: 'FILL' 1;">handshake</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider mt-1">AI Trades</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider mt-1">Profile</span>
+</a>
+</nav>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

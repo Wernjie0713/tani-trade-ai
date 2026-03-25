@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TaniTrade AI - Smart Barter &amp; Early Demand</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-high": "#e9e8e5",
+              "surface-container-low": "#f4f3f1",
+              "inverse-on-surface": "#f2f1ee",
+              "on-background": "#1a1c1a",
+              "on-primary-container": "#c2e4b4",
+              "surface-tint": "#496640",
+              "on-secondary-fixed-variant": "#3e4c16",
+              "secondary": "#56642b",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#cba72f",
+              "on-secondary-container": "#5a682f",
+              "primary": "#334f2b",
+              "primary-container": "#4a6741",
+              "surface-bright": "#faf9f6",
+              "surface-variant": "#e3e2e0",
+              "on-tertiary-container": "#4e3d00",
+              "secondary-fixed": "#d9eaa3",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#324e2a",
+              "error": "#ba1a1a",
+              "on-surface-variant": "#434840",
+              "background": "#faf9f6",
+              "primary-fixed": "#caecbc",
+              "tertiary-fixed": "#ffe088",
+              "inverse-primary": "#afd0a1",
+              "surface-container": "#efeeeb",
+              "on-surface": "#1a1c1a",
+              "on-tertiary-fixed": "#241a00",
+              "secondary-fixed-dim": "#bdce89",
+              "tertiary-fixed-dim": "#e9c349",
+              "surface-dim": "#dbdad7",
+              "on-secondary": "#ffffff",
+              "surface-container-highest": "#e3e2e0",
+              "outline-variant": "#c3c8bd",
+              "on-primary-fixed": "#062104",
+              "inverse-surface": "#2f312f",
+              "outline": "#73796f",
+              "on-secondary-fixed": "#161f00",
+              "on-error-container": "#93000a",
+              "surface": "#faf9f6",
+              "secondary-container": "#d6e7a1",
+              "tertiary": "#735c00",
+              "primary-fixed-dim": "#afd0a1",
+              "on-tertiary-fixed-variant": "#574500"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "1rem", 
+              "lg": "2rem", 
+              "xl": "3rem", 
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        min-height: 100dvh;
+        background-color: #faf9f6;
+      }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/20 flex flex-col">
+<!-- Top Navigation (Concise Mobile Shell) -->
+<header class="w-full top-0 sticky z-50 bg-[#FAF9F6]/80 backdrop-blur-md">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto">
+<span class="font-headline font-extrabold text-[#334F2B] tracking-tight text-xl">TaniTrade AI</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#334F2B] text-xl">notifications</span>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-outline-variant/30">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7EuaP7ZV57AYDxWUG4O2RNUu0DrTAJikEW3gpWPTH5XuDH4iC5PxzaSSxARV1lHp2Z0inz1A37yRrdLjpq87lzQR7gG85r51ZO11BW84VYUpY6u99LlJztxiUISPE02QLqGtCaS4EiFDUPetvTImHdiqUf9FifjtpQOzot8UqPdZdsud6ObhjoG2vqpQSN0uwMR26338-lf3jWIQb_ZpghqwLdwvmZyDt4IBldOBxR3Af-T99UK8feNSXyk7k9Q3XZLdIBElDtfs"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow flex flex-col max-w-lg mx-auto w-full">
+<!-- Hero Section -->
+<section class="px-6 pt-4 pb-6 flex flex-col gap-5">
+<div class="flex flex-col gap-4">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high w-fit">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">eco</span>
+<span class="font-label text-[10px] font-bold uppercase tracking-widest text-primary">New: AI-Driven Barter</span>
+</div>
+<h1 class="font-headline font-extrabold text-3xl text-primary leading-tight tracking-tight">
+                    Harvesting future demand through smart trade.
+                </h1>
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">
+                    Secure commitments before you even plant. The premium digital marketplace for smallholder farmers.
+                </p>
+</div>
+<!-- Visual Element -->
+<div class="relative w-full aspect-[16/10] rounded-lg overflow-hidden shadow-sm">
+<img alt="Agricultural Fields" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYhfDrwXMB0lLO1PIXBrXUDjPXmQzZqdRZYlX5Nrr1vrrlsXjmHXQxQ7DBQN3nLR4aR9JcsF2z13U0zVCkIF2NgxI-1Ei34OCtnfqxawwWAP1qohtwxtRni-SdZfKDxAp8BObhjR5i6ETRL_nCgrRQtLhROq5UlrlFKTcwhDC_NGo2LT9Za7FDCRSmfDkG8DpOlkX961WrkaPD_md7CvexnSDX9S2xWRNJhGzu3eN9RRlBEcLMxQSIlLZvPbRNFwgghPZ9XhLd4Ig"/>
+<div class="absolute bottom-4 left-4 flex items-center gap-2 bg-primary/20 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/20">
+<span class="material-symbols-outlined text-white text-sm">trending_up</span>
+<span class="text-white text-[10px] font-bold uppercase tracking-wider">Live Market Activity</span>
+</div>
+</div>
+</section>
+<!-- Role Selection -->
+<section class="px-6 pb-10 flex flex-col gap-4">
+<div class="text-center py-2">
+<p class="font-label text-[10px] font-extrabold uppercase tracking-[0.2em] text-tertiary">Begin Your Journey</p>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Farmer Card -->
+<button class="group flex items-center gap-4 p-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 active:scale-[0.98] transition-all shadow-sm">
+<div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-2xl">agriculture</span>
+</div>
+<div class="text-left flex-grow">
+<h3 class="font-headline font-bold text-base text-primary">I am a Farmer</h3>
+<p class="font-body text-[11px] text-on-surface-variant leading-tight">List surplus and secure pre-harvest demand.</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<!-- Buyer Card -->
+<button class="group flex items-center gap-4 p-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 active:scale-[0.98] transition-all shadow-sm">
+<div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">shopping_basket</span>
+</div>
+<div class="text-left flex-grow">
+<h3 class="font-headline font-bold text-base text-secondary">I am a Buyer</h3>
+<p class="font-body text-[11px] text-on-surface-variant leading-tight">Source fresh produce directly from the origin.</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Footer (Minimal Mobile) -->
+<footer class="px-6 py-8 bg-surface-container/50 text-center border-t border-outline-variant/10">
+<p class="text-[10px] text-on-surface-variant/60 font-semibold tracking-wide">© 2024 TANITRADE AI. POWERED BY SMART AGRICULTURE.</p>
+<div class="flex justify-center gap-6 mt-4">
+<a class="text-[10px] text-primary font-extrabold uppercase tracking-widest" href="#">Terms</a>
+<a class="text-[10px] text-primary font-extrabold uppercase tracking-widest" href="#">Privacy</a>
+</div>
+</footer>
+</body></html>
