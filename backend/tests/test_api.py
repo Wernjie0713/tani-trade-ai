@@ -210,6 +210,11 @@ class FakeFarmerWorkflowService:
         )
 
 
+class BrokenBootstrapService(FakeFarmerWorkflowService):
+    def get_bootstrap(self) -> DemoBootstrapResponse:
+        raise RuntimeError("boom")
+
+
 class FarmerApiRouteTests(unittest.TestCase):
     def setUp(self) -> None:
         self.fake_service = FakeFarmerWorkflowService()
@@ -273,6 +278,13 @@ class FarmerApiRouteTests(unittest.TestCase):
         response = self.client.post("/api/v1/farmer/proposals/proposal-conflict/accept")
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.json()["detail"], "This proposal can no longer be accepted.")
+
+    def test_unhandled_errors_return_json_response(self) -> None:
+        app.dependency_overrides[get_farmer_workflow_service] = lambda: BrokenBootstrapService()
+        client = TestClient(app, raise_server_exceptions=False)
+        response = client.get("/api/v1/demo/bootstrap")
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json()["detail"], "Internal server error.")
 
 
 if __name__ == "__main__":

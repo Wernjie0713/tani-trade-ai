@@ -1,5 +1,7 @@
 import { apiRequest } from "@/lib/api"
 
+const proposalRequestCache = new Map()
+
 export function getDemoBootstrap() {
   return apiRequest("/demo/bootstrap")
 }
@@ -22,9 +24,19 @@ export function getOrCreateFarmerMatches(requestId) {
 }
 
 export function getOrCreateFarmerProposal(matchId) {
-  return apiRequest(`/farmer/matches/${matchId}/proposal`, {
+  if (proposalRequestCache.has(matchId)) {
+    return proposalRequestCache.get(matchId)
+  }
+
+  const request = apiRequest(`/farmer/matches/${matchId}/proposal`, {
     method: "POST",
   })
+    .finally(() => {
+      proposalRequestCache.delete(matchId)
+    })
+
+  proposalRequestCache.set(matchId, request)
+  return request
 }
 
 export function acceptFarmerProposal(proposalId) {

@@ -5,6 +5,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
+from postgrest.exceptions import APIError as PostgrestAPIError
 
 from app.repositories.farmer_workflow import FarmerWorkflowRepository
 from app.schemas.farmer_flow import (
@@ -21,6 +22,7 @@ from app.schemas.farmer_flow import (
     IntakeSummaryResponse,
     TradeResponse,
 )
+from app.services.ai.orchestrator import FarmerAiOrchestrator
 from app.services.catalog import crop_label, find_crop_code
 from app.services.matching import distance_score, haversine_km, total_match_score, trust_score
 from app.services.parser import parse_intake
@@ -34,9 +36,11 @@ class FarmerWorkflowService:
         self,
         repo: FarmerWorkflowRepository,
         demo_farmer_profile_id: str,
+        ai_orchestrator: FarmerAiOrchestrator | None = None,
     ) -> None:
         self.repo = repo
         self.demo_farmer_profile_id = demo_farmer_profile_id
+        self.ai_orchestrator = ai_orchestrator
 
     def get_bootstrap(self) -> DemoBootstrapResponse:
         demo_profile = self._require_demo_farmer()
@@ -65,8 +69,16 @@ class FarmerWorkflowService:
                 detail="raw_text is required.",
             )
 
-        self._require_demo_farmer()
-        parsed = parse_intake(raw_text)
+        farmer_profile = self._require_demo_farmer()
+        if self.ai_orchestrator is None:
+            parsed = parse_intake(raw_text)
+        else:
+            ai_result = self.ai_orchestrator.extract_intake(
+                raw_text=raw_text,
+                farmer_profile=farmer_profile,
+                inventory_rows=self.repo.list_inventory_by_owner(self.demo_farmer_profile_id),
+            )
+            parsed = ai_result.parsed_intake
         market_opportunity_count = self.repo.count_candidate_inventory(
             parsed.need_item.normalized_name,
             self.demo_farmer_profile_id,
@@ -257,49 +269,81 @@ class FarmerWorkflowService:
         meeting_point = self._select_meeting_point(counterparty)
         meeting_at = self._next_demo_meeting_slot()
         document_number = f"TT-{match_row['id'][:8].upper()}-AI"
-        explanation = (
+        fallback_explanation = (
             f"Value parity uses seeded market references for {have_item['display_name']} and "
             f"{snapshot['offered_item_name']}. The offer is rounded to a practical "
             f"{snapshot['offered_unit']} handover amount."
         )
-
-        proposal_row = self.repo.create_proposal(
-            {
-                "request_id": request_row["id"],
-                "match_id": match_row["id"],
-                "counterparty_profile_id": counterparty["id"],
-                "offer_item_name": have_item["display_name"],
-                "offer_quantity": offered_quantity,
-                "offer_unit": offered_unit,
-                "requested_item_name": snapshot["offered_item_name"],
-                "requested_quantity": requested_quantity,
-                "requested_unit": snapshot["offered_unit"],
-                "ratio_text": ratio_text,
-                "valuation_confidence": 0.94,
-                "explanation": explanation,
-                "meeting_point_id": meeting_point["id"],
-                "meeting_point_name": meeting_point["name"],
-                "meeting_label": "Tomorrow - 09:00 AM",
-                "meeting_at": meeting_at.isoformat(),
-                "document_number": document_number,
-                "status": "pending",
-                "snapshot": {
-                    "counterparty_name": counterparty["display_name"],
-                    "counterparty_avatar_url": counterparty.get("avatar_url"),
-                    "offer_item_name": have_item["display_name"],
-                    "offer_quantity": offered_quantity,
-                    "offer_unit": offered_unit,
-                    "requested_item_name": snapshot["offered_item_name"],
-                    "requested_quantity": requested_quantity,
-                    "requested_unit": snapshot["offered_unit"],
-                    "ratio_text": ratio_text,
-                    "meeting_point_name": meeting_point["name"],
-                    "meeting_label": "Tomorrow - 09:00 AM",
-                    "document_number": document_number,
-                    "explanation": explanation,
+        proposal_explanation = fallback_explanation
+        proposal_snapshot_ai = None
+        if self.ai_orchestrator is not None:
+            proposal_copy = self.ai_orchestrator.generate_proposal_copy(
+                request_row=request_row,
+                have_item=have_item,
+                need_item=items_by_role["need"],
+                counterparty=counterparty,
+                counterparty_offer={
+                    "item_name": snapshot["offered_item_name"],
+                    "quantity": snapshot["offered_quantity"],
+                    "unit": snapshot["offered_unit"],
+                    "distance_km": float(match_row["distance_km"]),
                 },
-            }
-        )
+                offered_price=offered_price,
+                requested_price=requested_price,
+                ratio_text=ratio_text,
+                meeting_point=meeting_point,
+                fallback_explanation=fallback_explanation,
+            )
+            proposal_explanation = proposal_copy.explanation
+            proposal_snapshot_ai = proposal_copy.metadata.to_snapshot()
+
+        proposal_snapshot = {
+            "counterparty_name": counterparty["display_name"],
+            "counterparty_avatar_url": counterparty.get("avatar_url"),
+            "offer_item_name": have_item["display_name"],
+            "offer_quantity": offered_quantity,
+            "offer_unit": offered_unit,
+            "requested_item_name": snapshot["offered_item_name"],
+            "requested_quantity": requested_quantity,
+            "requested_unit": snapshot["offered_unit"],
+            "ratio_text": ratio_text,
+            "meeting_point_name": meeting_point["name"],
+            "meeting_label": "Tomorrow - 09:00 AM",
+            "document_number": document_number,
+            "explanation": proposal_explanation,
+        }
+        if proposal_snapshot_ai is not None:
+            proposal_snapshot["ai"] = proposal_snapshot_ai
+
+        proposal_payload = {
+            "request_id": request_row["id"],
+            "match_id": match_row["id"],
+            "counterparty_profile_id": counterparty["id"],
+            "offer_item_name": have_item["display_name"],
+            "offer_quantity": offered_quantity,
+            "offer_unit": offered_unit,
+            "requested_item_name": snapshot["offered_item_name"],
+            "requested_quantity": requested_quantity,
+            "requested_unit": snapshot["offered_unit"],
+            "ratio_text": ratio_text,
+            "valuation_confidence": 0.94,
+            "explanation": proposal_explanation,
+            "meeting_point_id": meeting_point["id"],
+            "meeting_point_name": meeting_point["name"],
+            "meeting_label": "Tomorrow - 09:00 AM",
+            "meeting_at": meeting_at.isoformat(),
+            "document_number": document_number,
+            "status": "pending",
+            "snapshot": proposal_snapshot,
+        }
+        try:
+            proposal_row = self.repo.create_proposal(proposal_payload)
+        except PostgrestAPIError as exc:
+            if exc.code == "23505":
+                existing_proposal = self.repo.get_existing_proposal_for_match(match_id)
+                if existing_proposal is not None:
+                    return self._build_proposal_response(existing_proposal)
+            raise
         self.repo.update_barter_request(request_row["id"], {"status": "proposed"})
         return self._build_proposal_response(proposal_row)
 
@@ -376,6 +420,11 @@ class FarmerWorkflowService:
             input_summary=payload.input_summary,
         )
 
+        fallback_listing_title = f"Future {crop_label(crop_code)} Supply"
+        fallback_listing_note = projection.listing_note
+        fallback_soil_vitality_label = projection.soil_vitality_label
+        fallback_yield_probability_label = projection.yield_probability_label
+
         existing_planting = self.repo.get_planting_record_by_trade(trade_id)
         planting_payload = {
             "trade_id": trade_id,
@@ -399,12 +448,18 @@ class FarmerWorkflowService:
             planting_row = self.repo.update_planting_record(existing_planting["id"], planting_payload)
 
         existing_listing = self.repo.get_harvest_listing_by_planting(planting_row["id"])
+        listing_title = fallback_listing_title
+        listing_note = fallback_listing_note
+        soil_vitality_label = fallback_soil_vitality_label
+        yield_probability_label = fallback_yield_probability_label
+        listing_snapshot_ai = None
+
         listing_payload = {
             "planting_record_id": planting_row["id"],
             "farmer_profile_id": self.demo_farmer_profile_id,
             "crop_code": crop_code,
             "crop_label": crop_label(crop_code),
-            "listing_title": f"Future {crop_label(crop_code)} Supply",
+            "listing_title": fallback_listing_title,
             "estimated_yield_min_kg": projection.estimated_yield_min_kg,
             "estimated_yield_max_kg": projection.estimated_yield_max_kg,
             "harvest_window_start": projection.harvest_window_start.isoformat(),
@@ -413,13 +468,33 @@ class FarmerWorkflowService:
             "confidence_score": projection.confidence_score,
             "reservation_discount_pct": projection.reservation_discount_pct,
             "early_incentive_label": projection.early_incentive_label,
-            "listing_note": projection.listing_note,
+            "listing_note": fallback_listing_note,
             "status": "draft",
-            "snapshot": {
-                "soil_vitality_label": projection.soil_vitality_label,
-                "yield_probability_label": projection.yield_probability_label,
-            },
         }
+        if self.ai_orchestrator is not None:
+            listing_copy = self.ai_orchestrator.generate_listing_copy(
+                crop_profile=crop_profile,
+                planting_row=planting_row,
+                listing_payload=listing_payload,
+                fallback_listing_title=fallback_listing_title,
+                fallback_listing_note=fallback_listing_note,
+                fallback_soil_vitality_label=fallback_soil_vitality_label,
+                fallback_yield_probability_label=fallback_yield_probability_label,
+            )
+            listing_title = listing_copy.listing_title
+            listing_note = listing_copy.listing_note
+            soil_vitality_label = listing_copy.soil_vitality_label
+            yield_probability_label = listing_copy.yield_probability_label
+            listing_snapshot_ai = listing_copy.metadata.to_snapshot()
+
+        listing_payload["listing_title"] = listing_title
+        listing_payload["listing_note"] = listing_note
+        listing_payload["snapshot"] = {
+            "soil_vitality_label": soil_vitality_label,
+            "yield_probability_label": yield_probability_label,
+        }
+        if listing_snapshot_ai is not None:
+            listing_payload["snapshot"]["ai"] = listing_snapshot_ai
 
         if existing_listing is None:
             listing_row = self.repo.create_harvest_listing(listing_payload)

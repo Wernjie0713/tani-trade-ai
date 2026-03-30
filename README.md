@@ -229,14 +229,14 @@ Copy-Item frontend\.env.example frontend\.env
 python -m venv backend\.venv
 backend\.venv\Scripts\Activate.ps1
 pip install -r backend\requirements.txt
-uvicorn app.main:app --reload --app-dir backend
+uvicorn app.main:app --reload --app-dir backend --port 8010
 ```
 
 Backend URLs:
 
-- API: `http://localhost:8000`
-- Docs: `http://localhost:8000/docs`
-- Health: `http://localhost:8000/api/v1/health`
+- API: `http://localhost:8010`
+- Docs: `http://localhost:8010/docs`
+- Health: `http://localhost:8010/api/v1/health`
 
 ### Frontend setup
 
@@ -269,9 +269,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 `frontend/.env`
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_API_BASE_URL=http://localhost:8010/api/v1
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 ```
 
 ## Demo Narrative

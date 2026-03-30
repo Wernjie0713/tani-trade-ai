@@ -12,6 +12,18 @@ class FarmerWorkflowRepository:
     def get_profile(self, profile_id: str) -> dict[str, Any] | None:
         return self._select_first("profiles", {"id": profile_id})
 
+    def list_inventory_by_owner(self, profile_id: str) -> list[dict[str, Any]]:
+        return (
+            self.client.table("inventory_items")
+            .select("*")
+            .eq("owner_profile_id", profile_id)
+            .eq("availability_status", "available")
+            .order("created_at")
+            .execute()
+            .data
+            or []
+        )
+
     def get_profiles_by_ids(self, profile_ids: list[str]) -> dict[str, dict[str, Any]]:
         if not profile_ids:
             return {}

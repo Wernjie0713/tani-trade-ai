@@ -3,6 +3,8 @@ from fastapi import Depends, HTTPException, status
 from app.core.config import Settings, get_settings
 from app.db.supabase import get_supabase_client
 from app.repositories.farmer_workflow import FarmerWorkflowRepository
+from app.services.ai.client import GeminiAiClient
+from app.services.ai.orchestrator import FarmerAiOrchestrator
 from app.services.farmer_flow import FarmerWorkflowService
 
 
@@ -13,10 +15,26 @@ def get_farmer_workflow_service(
     if client is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+            detail="Supabase is not configured. Set SUPABASE_URL and SUPABASE_SECRET_KEY.",
+        )
+
+    ai_client = None
+    if settings.gemini_api_key:
+        ai_client = GeminiAiClient(
+            api_key=settings.gemini_api_key,
+            timeout_seconds=settings.gemini_timeout_seconds,
+            max_retries=settings.gemini_max_retries,
+            debug_logging=settings.ai_debug_logging,
         )
 
     return FarmerWorkflowService(
         repo=FarmerWorkflowRepository(client),
         demo_farmer_profile_id=settings.demo_farmer_profile_id,
+        ai_orchestrator=FarmerAiOrchestrator(
+            client=ai_client,
+            primary_model=settings.gemini_model_primary,
+            listing_model=settings.gemini_model_listing,
+            fallback_enabled=settings.ai_fallback_enabled,
+            debug_logging=settings.ai_debug_logging,
+        ),
     )
