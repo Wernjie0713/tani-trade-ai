@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
+import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { createFarmerIntake } from "@/lib/farmerApi"
@@ -122,21 +123,7 @@ function FarmerVoiceInputPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
-        <header className="w-full top-0 sticky z-50 bg-[#FAF9F6]/90 backdrop-blur-md">
-          <div className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden ring-2 ring-primary-container/20">
-                <img alt="User profile photo" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAexMsbu0p7B5HPpUf1nCNqj3V2ZiF9jibKmZrVn4W_u2tCyP0f7R-XRkLw8YI3QKBvE7o3iP1xhZqFu6O2TE0fpTHDnB5FlvCdKYgH4qGsjSZwcWw6BCVom19Cd525ugZL5JmEyoFux7-shzgyLHqRaNMOnNbc1WkgEpd9traIns3dDhc-O5u_cyy20wsWK5pKBYhb84OlR_wo5kIRUxTjUhoDZ6YE7PHlQwECevq_K7-mcU4M9m1kXMHXtNRXVKhnVr-Pf-Qc9-c" />
-              </div>
-              <h1 className="font-headline font-black text-[#334F2B] tracking-tighter text-lg">TaniTrade AI</h1>
-            </div>
-            <button className="text-[#334F2B] hover:opacity-80 transition-opacity p-2 bg-surface-container-low rounded-full" onClick={() => navigate(ROUTES.HOME)} type="button">
-              <span className="material-symbols-outlined text-xl">location_on</span>
-            </button>
-          </div>
-        </header>
-
+      <FarmerShell activeNav="barter" headerTitle="Farmer Barter Desk">
         <main className="max-w-md mx-auto px-6 pt-6">
           <section className="mb-8 text-center">
             <h2 className="font-headline font-extrabold text-[32px] leading-tight text-primary tracking-tight mb-3">What's on your mind?</h2>
@@ -204,22 +191,7 @@ function FarmerVoiceInputPage() {
             <span className="material-symbols-outlined group-hover:rotate-12 transition-transform" style={{ fontVariationSettings: "'FILL' 1" }}>temp_preferences_custom</span>
           </button>
         </main>
-
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-[#FAF9F6]/90 backdrop-blur-xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)] rounded-t-[2.5rem] border-t border-primary/5">
-          <Link className="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:text-primary transition-all duration-300" to={ROUTES.HOME}>
-            <span className="material-symbols-outlined">home</span>
-            <span className="font-['Inter'] text-[10px] font-bold uppercase tracking-wider mt-1">Home</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center bg-primary text-white rounded-full px-6 py-2.5 shadow-lg shadow-primary/20 transition-all duration-300" to={ROUTES.FARMER_VOICE_INPUT}>
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
-            <span className="font-['Inter'] text-[10px] font-bold uppercase tracking-wider mt-1">AI Trades</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:text-primary transition-all duration-300" to={ROUTES.PROTOTYPE}>
-            <span className="material-symbols-outlined">person</span>
-            <span className="font-['Inter'] text-[10px] font-bold uppercase tracking-wider mt-1">Profile</span>
-          </Link>
-        </nav>
-      </>
+      </FarmerShell>
     </PrototypePageFrame>
   )
 }

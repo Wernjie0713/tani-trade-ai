@@ -1,6 +1,7 @@
 import AiTradeProposalPage from "@/pages/prototype/AiTradeProposalPage"
 import BuyerMarketplacePage from "@/pages/prototype/BuyerMarketplacePage"
 import FarmerVoiceInputPage from "@/pages/prototype/FarmerVoiceInputPage"
+import FarmerFutureSupplyReadinessPage from "@/pages/prototype/FarmerFutureSupplyReadinessPage"
 import FutureSupplyReadinessPage from "@/pages/prototype/FutureSupplyReadinessPage"
 import LandingRoleSelectionPage from "@/pages/prototype/LandingRoleSelectionPage"
 import NearbyBarterMatchesPage from "@/pages/prototype/NearbyBarterMatchesPage"
@@ -60,6 +61,13 @@ export const prototypePages = [
     component: RecordPlantingPage,
   },
   {
+    path: "/farmer/future-supply-readiness",
+    group: "Farmer Flow",
+    label: "Farmer future supply readiness",
+    description: "Farmer-side harvest listing preview after planting.",
+    component: FarmerFutureSupplyReadinessPage,
+  },
+  {
     path: "/buyer/marketplace",
     group: "Buyer Flow",
     label: "Buyer marketplace",
@@ -69,8 +77,8 @@ export const prototypePages = [
   {
     path: "/buyer/future-supply-readiness",
     group: "Buyer Flow",
-    label: "Future supply readiness",
-    description: "Readiness scoring for future harvest windows.",
+    label: "Buyer supply review",
+    description: "Buyer-side future supply detail and reservation review.",
     component: FutureSupplyReadinessPage,
   },
   {

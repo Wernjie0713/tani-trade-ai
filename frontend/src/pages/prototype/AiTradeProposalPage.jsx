@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
-import { Link, Navigate, useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 
+import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { acceptFarmerProposal, getOrCreateFarmerProposal } from "@/lib/farmerApi"
@@ -165,19 +166,11 @@ function AiTradeProposalPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
-        <header className="w-full top-0 sticky z-50 bg-[#FAF9F6]/80 backdrop-blur-md flex justify-between items-center px-6 py-4 max-w-md mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container border-2 border-primary/10 shadow-sm">
-              <img alt="User Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcpWFzodPDUP1iaHfSeQNfhUbCfZulBRD0DWqDiH_o0F0G9FKT0K7YEY8XtnwT8mayLrYvvRogRc0T3gZ4aOvsGtXRT_s1x9BxnS73f5Ni1ArgmmG5QzzmNiZSI5L2DYiTXSvy8BWDfZTeMva0AKxMyJdt5cjl2yTTPbRWhsTnW8_6L23bN2_kQEnr5_S_2ViiAvpl8G4sJzivXZaDN_YzHdOczqILwQODQqmcG-w37l10d3nQuCj-nUuFi3dLgNoVKKonFrdjYwU" />
-            </div>
-            <span className="font-headline font-extrabold text-[#334F2B] tracking-tight text-lg">TaniTrade <span className="text-tertiary">AI</span></span>
-          </div>
-          <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors text-primary active:scale-90" onClick={() => navigate(ROUTES.FARMER_NEARBY_MATCHES)} type="button">
-            <span className="material-symbols-outlined">more_vert</span>
-          </button>
-        </header>
-
+      <FarmerShell
+        activeNav="barter"
+        backTo={ROUTES.FARMER_NEARBY_MATCHES}
+        headerTitle="Trade Proposal"
+      >
         <main className="px-6 max-w-md mx-auto pt-4 space-y-6">
           <section className="flex justify-between items-end">
             <div className="space-y-0.5">
@@ -337,22 +330,7 @@ function AiTradeProposalPage() {
             </p>
           </div>
         </main>
-
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-white/90 backdrop-blur-2xl rounded-t-[2.5rem] border-t border-outline-variant/20 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-          <Link className="flex flex-col items-center justify-center text-outline/60 px-5 py-2 rounded-full transition-all" to={ROUTES.BUYER_MARKETPLACE}>
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-[9px] font-black uppercase tracking-wider mt-1">Market</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center bg-primary text-on-primary rounded-3xl px-8 py-3 transition-all shadow-lg shadow-primary/20 -translate-y-1" to={ROUTES.FARMER_AI_TRADE_PROPOSAL}>
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
-            <span className="text-[9px] font-black uppercase tracking-wider mt-1">Active</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center text-outline/60 px-5 py-2 rounded-full transition-all" to={ROUTES.PROTOTYPE}>
-            <span className="material-symbols-outlined">account_balance_wallet</span>
-            <span className="text-[9px] font-black uppercase tracking-wider mt-1">Ledger</span>
-          </Link>
-        </nav>
-      </>
+      </FarmerShell>
     </PrototypePageFrame>
   )
 }

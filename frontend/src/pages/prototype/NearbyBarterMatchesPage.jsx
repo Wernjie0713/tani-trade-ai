@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
-import { Link, Navigate, useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 
+import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { getOrCreateFarmerMatches } from "@/lib/farmerApi"
@@ -146,21 +147,11 @@ function NearbyBarterMatchesPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
-        <header className="w-full top-0 sticky z-50 bg-[#FAF9F6] dark:bg-[#1A1C1A]">
-          <div className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden">
-                <img alt="User Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBDqr7FUkGYhOxmZeoYgVtsMAJxiHzkzSPXgcL62_rsjj2rKu19eX69azwwSsGcULWhtv7kDWMwUTWkOAHpRzBcaMZXIB-McmPvj0FFL8EB1vaVY5vjvlXcCizlQcsVrHiD8CEEt_Dk04XD1Yi4rZKPdComlo_PxMVlwuPNkqASomWPzQLv36DqTb3aQ7L3PZIh5-V9jt9zZ0FpRCFef6NP4W4xODyr1B1K_m_udZ01CAKFc9BkKwAz7HjYADM_7uccerJlBneLdQ" />
-              </div>
-              <h1 className="font-headline font-extrabold text-[#334F2B] dark:text-[#FAF9F6] tracking-tighter text-xl">TaniTrade AI</h1>
-            </div>
-            <button className="text-[#334F2B] dark:text-[#FAF9F6] hover:opacity-80 transition-opacity" onClick={() => navigate(ROUTES.FARMER_PARSED_SUMMARY)} type="button">
-              <span className="material-symbols-outlined">location_on</span>
-            </button>
-          </div>
-        </header>
-
+      <FarmerShell
+        activeNav="barter"
+        backTo={ROUTES.FARMER_PARSED_SUMMARY}
+        headerTitle="Nearby Matches"
+      >
         <main className="max-w-md mx-auto px-6 pb-32">
           <section className="mt-8 mb-8">
             <h2 className="font-headline font-extrabold text-4xl text-primary tracking-tight leading-tight mb-3">
@@ -338,22 +329,7 @@ function NearbyBarterMatchesPage() {
             </div>
           )}
         </main>
-
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-[#FAF9F6]/90 dark:bg-[#1A1C1A]/90 backdrop-blur-2xl rounded-t-[3rem] border-t border-[#334F2B]/10 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
-          <Link className="flex flex-col items-center justify-center text-[#4A6741] opacity-50 px-5 py-2 hover:bg-[#4A6741]/5 rounded-full transition-all" to={ROUTES.HOME}>
-            <span className="material-symbols-outlined">home</span>
-            <span className="font-['Inter'] text-[10px] font-black uppercase tracking-[0.1em] mt-1">Home</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center bg-[#334F2B] text-white rounded-full px-6 py-2 transition-all shadow-lg" to={ROUTES.FARMER_NEARBY_MATCHES}>
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
-            <span className="font-['Inter'] text-[10px] font-black uppercase tracking-[0.1em] mt-1">Trade</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center text-[#4A6741] opacity-50 px-5 py-2 hover:bg-[#4A6741]/5 rounded-full transition-all" to={ROUTES.PROTOTYPE}>
-            <span className="material-symbols-outlined">person</span>
-            <span className="font-['Inter'] text-[10px] font-black uppercase tracking-[0.1em] mt-1">Profile</span>
-          </Link>
-        </nav>
-      </>
+      </FarmerShell>
     </PrototypePageFrame>
   )
 }

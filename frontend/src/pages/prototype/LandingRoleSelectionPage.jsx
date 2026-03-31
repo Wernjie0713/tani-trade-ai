@@ -4,7 +4,7 @@ import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { ROUTES } from "@/prototype/routes"
 
 const styles = [
-  "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        min-height: 100dvh;\n        background-color: #faf9f6;\n      }\n    "
+  "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        min-height: 100dvh;\n        background-color: #faf9f6;\n      }\n    ",
 ]
 
 const themeStyle = {
@@ -61,7 +61,7 @@ const themeStyle = {
   "--font-headline": "Manrope, sans-serif",
   "--radius": "1rem",
   "--radius-lg": "2rem",
-  "--radius-xl": "3rem"
+  "--radius-xl": "3rem",
 }
 
 function LandingRoleSelectionPage() {
@@ -74,79 +74,108 @@ function LandingRoleSelectionPage() {
       themeStyle={themeStyle}
     >
       <>
-        <header className="w-full top-0 sticky z-50 bg-[#FAF9F6]/80 backdrop-blur-md">
-        <div className="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto">
-        <span className="font-headline font-extrabold text-[#334F2B] tracking-tight text-xl">TaniTrade AI</span>
-        <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-[#334F2B] text-xl">notifications</span>
-        <div className="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-outline-variant/30">
-        <img alt="User Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7EuaP7ZV57AYDxWUG4O2RNUu0DrTAJikEW3gpWPTH5XuDH4iC5PxzaSSxARV1lHp2Z0inz1A37yRrdLjpq87lzQR7gG85r51ZO11BW84VYUpY6u99LlJztxiUISPE02QLqGtCaS4EiFDUPetvTImHdiqUf9FifjtpQOzot8UqPdZdsud6ObhjoG2vqpQSN0uwMR26338-lf3jWIQb_ZpghqwLdwvmZyDt4IBldOBxR3Af-T99UK8feNSXyk7k9Q3XZLdIBElDtfs" />
-        </div>
-        </div>
-        </div>
+        <header className="sticky top-0 z-50 w-full bg-[#FAF9F6]/80 backdrop-blur-md">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+            <span className="font-headline text-xl font-extrabold tracking-tight text-[#334F2B]">
+              TaniTrade AI
+            </span>
+            <div className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1">
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                Choose Role
+              </span>
+            </div>
+          </div>
         </header>
+
         <main className="flex-grow flex flex-col max-w-lg mx-auto w-full">
+          <section className="px-6 pt-4 pb-6 flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high w-fit">
+                <span
+                  className="material-symbols-outlined text-primary text-sm"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  eco
+                </span>
+                <span className="font-label text-[10px] font-bold uppercase tracking-widest text-primary">
+                  New: AI-Driven Barter
+                </span>
+              </div>
+              <h1 className="font-headline font-extrabold text-3xl text-primary leading-tight tracking-tight">
+                Harvesting future demand through smart trade.
+              </h1>
+              <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+                Secure commitments before you even plant. The premium digital marketplace for smallholder farmers.
+              </p>
+            </div>
 
-        <section className="px-6 pt-4 pb-6 flex flex-col gap-5">
-        <div className="flex flex-col gap-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high w-fit">
-        <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
-        <span className="font-label text-[10px] font-bold uppercase tracking-widest text-primary">New: AI-Driven Barter</span>
-        </div>
-        <h1 className="font-headline font-extrabold text-3xl text-primary leading-tight tracking-tight">
-                            Harvesting future demand through smart trade.
-                        </h1>
-        <p className="font-body text-sm text-on-surface-variant leading-relaxed">
-                            Secure commitments before you even plant. The premium digital marketplace for smallholder farmers.
-                        </p>
-        </div>
+            <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden shadow-sm">
+              <img
+                alt="Agricultural Fields"
+                className="w-full h-full object-cover"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYhfDrwXMB0lLO1PIXBrXUDjPXmQzZqdRZYlX5Nrr1vrrlsXjmHXQxQ7DBQN3nLR4aR9JcsF2z13U0zVCkIF2NgxI-1Ei34OCtnfqxawwWAP1qohtwxtRni-SdZfKDxAp8BObhjR5i6ETRL_nCgrRQtLhROq5UlrlFKTcwhDC_NGo2LT9Za7FDCRSmfDkG8DpOlkX961WrkaPD_md7CvexnSDX9S2xWRNJhGzu3eN9RRlBEcLMxQSIlLZvPbRNFwgghPZ9XhLd4Ig"
+              />
+              <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-primary/20 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/20">
+                <span className="material-symbols-outlined text-white text-sm">trending_up</span>
+                <span className="text-white text-[10px] font-bold uppercase tracking-wider">
+                  Live Market Activity
+                </span>
+              </div>
+            </div>
+          </section>
 
-        <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden shadow-sm">
-        <img alt="Agricultural Fields" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYhfDrwXMB0lLO1PIXBrXUDjPXmQzZqdRZYlX5Nrr1vrrlsXjmHXQxQ7DBQN3nLR4aR9JcsF2z13U0zVCkIF2NgxI-1Ei34OCtnfqxawwWAP1qohtwxtRni-SdZfKDxAp8BObhjR5i6ETRL_nCgrRQtLhROq5UlrlFKTcwhDC_NGo2LT9Za7FDCRSmfDkG8DpOlkX961WrkaPD_md7CvexnSDX9S2xWRNJhGzu3eN9RRlBEcLMxQSIlLZvPbRNFwgghPZ9XhLd4Ig" />
-        <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-primary/20 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/20">
-        <span className="material-symbols-outlined text-white text-sm">trending_up</span>
-        <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live Market Activity</span>
-        </div>
-        </div>
-        </section>
+          <section className="px-6 pb-10 flex flex-col gap-4">
+            <div className="text-center py-2">
+              <p className="font-label text-[10px] font-extrabold uppercase tracking-[0.2em] text-tertiary">
+                Begin Your Journey
+              </p>
+            </div>
+            <div className="flex flex-col gap-4">
+              <Link
+                className="group flex items-center gap-4 p-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 active:scale-[0.98] transition-all shadow-sm"
+                to={ROUTES.FARMER_VOICE_INPUT}
+              >
+                <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+                  <span className="material-symbols-outlined text-2xl">agriculture</span>
+                </div>
+                <div className="text-left flex-grow">
+                  <h3 className="font-headline font-bold text-base text-primary">I am a Farmer</h3>
+                  <p className="font-body text-[11px] text-on-surface-variant leading-tight">
+                    List surplus and secure pre-harvest demand.
+                  </p>
+                </div>
+                <span className="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">
+                  chevron_right
+                </span>
+              </Link>
 
-        <section className="px-6 pb-10 flex flex-col gap-4">
-        <div className="text-center py-2">
-        <p className="font-label text-[10px] font-extrabold uppercase tracking-[0.2em] text-tertiary">Begin Your Journey</p>
-        </div>
-        <div className="flex flex-col gap-4">
-
-        <Link className="group flex items-center gap-4 p-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 active:scale-[0.98] transition-all shadow-sm" to={ROUTES.FARMER_VOICE_INPUT}>
-        <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
-        <span className="material-symbols-outlined text-2xl">agriculture</span>
-        </div>
-        <div className="text-left flex-grow">
-        <h3 className="font-headline font-bold text-base text-primary">I am a Farmer</h3>
-        <p className="font-body text-[11px] text-on-surface-variant leading-tight">List surplus and secure pre-harvest demand.</p>
-        </div>
-        <span className="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
-        </Link>
-
-        <Link className="group flex items-center gap-4 p-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 active:scale-[0.98] transition-all shadow-sm" to={ROUTES.BUYER_MARKETPLACE}>
-        <div className="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
-        <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>shopping_basket</span>
-        </div>
-        <div className="text-left flex-grow">
-        <h3 className="font-headline font-bold text-base text-secondary">I am a Buyer</h3>
-        <p className="font-body text-[11px] text-on-surface-variant leading-tight">Source fresh produce directly from the origin.</p>
-        </div>
-        <span className="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
-        </Link>
-        </div>
-        </section>
+              <Link
+                className="group flex items-center gap-4 p-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 active:scale-[0.98] transition-all shadow-sm"
+                to={ROUTES.BUYER_MARKETPLACE}
+              >
+                <div className="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shrink-0">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    shopping_basket
+                  </span>
+                </div>
+                <div className="text-left flex-grow">
+                  <h3 className="font-headline font-bold text-base text-secondary">I am a Buyer</h3>
+                  <p className="font-body text-[11px] text-on-surface-variant leading-tight">
+                    Source fresh produce directly from the origin.
+                  </p>
+                </div>
+                <span className="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">
+                  chevron_right
+                </span>
+              </Link>
+            </div>
+          </section>
         </main>
 
         <footer className="px-6 py-8 bg-surface-container/50 text-center border-t border-outline-variant/10">
-        <p className="text-[10px] text-on-surface-variant/60 font-semibold tracking-wide">© 2024 TANITRADE AI. POWERED BY SMART AGRICULTURE.</p>
-        <div className="flex justify-center gap-6 mt-4">
-        <Link className="text-[10px] text-primary font-extrabold uppercase tracking-widest" to={ROUTES.PROTOTYPE}>Terms</Link>
-        <Link className="text-[10px] text-primary font-extrabold uppercase tracking-widest" to={ROUTES.PROTOTYPE}>Privacy</Link>
-        </div>
+          <p className="text-[10px] text-on-surface-variant/60 font-semibold tracking-wide">
+            © 2026 TANITRADE AI. WORKING MVP FOR FARMER BARTER AND BUYER RESERVATION.
+          </p>
         </footer>
       </>
     </PrototypePageFrame>

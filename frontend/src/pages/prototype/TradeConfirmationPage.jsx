@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Navigate, useNavigate } from "react-router-dom"
 
+import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { getFarmerTrade } from "@/lib/farmerApi"
@@ -132,7 +133,11 @@ function TradeConfirmationPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
+      <FarmerShell
+        activeNav="barter"
+        backTo={ROUTES.FARMER_AI_TRADE_PROPOSAL}
+        headerTitle="Trade Confirmed"
+      >
         <main className="min-h-screen max-w-md mx-auto flex flex-col px-6 pt-10 pb-8">
           <div className="flex flex-col items-center text-center space-y-6 mb-8">
             <div className="relative w-full aspect-[4/3] max-w-[320px]">
@@ -279,7 +284,7 @@ function TradeConfirmationPage() {
             </button>
           </div>
         </main>
-      </>
+      </FarmerShell>
     </PrototypePageFrame>
   )
 }

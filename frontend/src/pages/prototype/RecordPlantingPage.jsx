@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { Link, Navigate, useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 
+import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { createOrUpdatePlanting } from "@/lib/farmerApi"
@@ -125,7 +126,7 @@ function RecordPlantingPage() {
         plantingRecordId: listing.planting_record_id,
         harvestListingId: listing.harvest_listing_id,
       })
-      navigate(ROUTES.BUYER_FUTURE_SUPPLY_READINESS)
+      navigate(ROUTES.FARMER_FUTURE_SUPPLY_READINESS)
     } catch (error) {
       setSubmitState({
         status: "error",
@@ -142,21 +143,11 @@ function RecordPlantingPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
-        <header className="w-full top-0 sticky z-50 bg-[#FAF9F6]/90 backdrop-blur-md dark:bg-[#1A1C1A]/90">
-          <div className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 ring-4 ring-primary/5">
-                <img alt="User Avatar" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3x7a70rIl8arIeKucI72NnfFHuP_ke3EGeAoS1hVc1hdPX0nkroTCWJVjjPmI3bVc2UorskvN0LWqo6HHyJg1-IpWGr11ThlQC7jS6Z3F2BVm2RphBhtgCfLpoce7o5ywDkoxyJ2ZxWRfJbaLTxTl8Yu8vZPdeOZYX1rtLsCdCWuFMxWwurbVTBqvTNzi0JG5O-Z7Fz-f3eXd5BnYALGCsIEmbaxGvYPqHcqxF9cLBgcCcd03ZweBS0uuHSxnYEqwbDzoFbo2pOY" />
-              </div>
-              <h1 className="font-headline font-extrabold text-primary dark:text-[#FAF9F6] tracking-tight text-lg">TaniTrade AI</h1>
-            </div>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-primary hover:bg-surface-container transition-colors" onClick={() => navigate(ROUTES.FARMER_TRADE_CONFIRMATION)} type="button">
-              <span className="material-symbols-outlined">location_on</span>
-            </button>
-          </div>
-        </header>
-
+      <FarmerShell
+        activeNav="harvest"
+        backTo={ROUTES.FARMER_TRADE_CONFIRMATION}
+        headerTitle="Planting Record"
+      >
         <main className="max-w-md mx-auto px-6 pt-4 pb-32">
           <section className="mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full mb-6 border border-primary/10">
@@ -242,26 +233,7 @@ function RecordPlantingPage() {
             </div>
           </form>
         </main>
-
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-10 pt-4 bg-[#FAF9F6]/95 dark:bg-[#1A1C1A]/95 backdrop-blur-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.06)] rounded-t-[3rem] border-t border-primary/5">
-          <Link className="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:bg-primary/5 rounded-full transition-all" to={ROUTES.HOME}>
-            <span className="material-symbols-outlined !text-[26px]">dashboard</span>
-            <span className="font-label text-[10px] font-bold uppercase tracking-wider mt-1">Home</span>
-          </Link>
-
-          <Link className="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-6 py-3 transition-all duration-300 shadow-lg shadow-primary/20" to={ROUTES.FARMER_RECORD_PLANTING}>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined !text-[24px]">eco</span>
-              <span className="font-label text-[10px] font-bold uppercase tracking-widest">Active Crop</span>
-            </div>
-          </Link>
-
-          <Link className="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:bg-primary/5 rounded-full transition-all" to={ROUTES.PROTOTYPE}>
-            <span className="material-symbols-outlined !text-[26px]">account_circle</span>
-            <span className="font-label text-[10px] font-bold uppercase tracking-wider mt-1">Profile</span>
-          </Link>
-        </nav>
-      </>
+      </FarmerShell>
     </PrototypePageFrame>
   )
 }

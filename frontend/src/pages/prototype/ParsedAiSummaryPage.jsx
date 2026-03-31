@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
-import { Link, Navigate, useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 
+import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { getFarmerIntake, getOrCreateFarmerMatches } from "@/lib/farmerApi"
@@ -160,21 +161,11 @@ function ParsedAiSummaryPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
-        <header className="w-full top-0 sticky z-50 bg-background/80 backdrop-blur-md">
-          <div className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-outline/10">
-                <img alt="User" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzMEbgJtaFYTcrnXABGNvREXJKrvP-mkqB3ecWe-gcOyxqawBXYE7pt3srZAeQTMub4EGvTw0ycrZegbEqJyrq0phEbAvc5ckIEe1SOMpHJ8XbWOWSXEyKxRVkYtNxndEJM8kNQGaTF3c2L0kUExQ0GFvve2NfRgMV4Oh0VI3kgnohrcfjSmWqG0-vCbI_zBCvjmuDwGbwSVssg3dDG09_-KsyhbcVHhSl8T34FxKwOlzhqgn5sCjaQOeNa_QuCfJ5ghU1i2Aq23g" />
-              </div>
-              <h1 className="font-headline font-extrabold text-primary tracking-tight text-lg">TaniTrade AI</h1>
-            </div>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors" onClick={() => navigate(ROUTES.FARMER_VOICE_INPUT)} type="button">
-              <span className="material-symbols-outlined text-primary">location_on</span>
-            </button>
-          </div>
-        </header>
-
+      <FarmerShell
+        activeNav="barter"
+        backTo={ROUTES.FARMER_VOICE_INPUT}
+        headerTitle="Parsed Summary"
+      >
         <main className="flex-grow w-full max-w-md mx-auto px-6 pt-2 pb-32">
           <section className="mb-8">
             <div className="inline-flex items-center gap-2 bg-[#E7EFDE] px-3 py-1 rounded-full mb-4 border border-primary/10">
@@ -311,22 +302,7 @@ function ParsedAiSummaryPage() {
             </>
           )}
         </main>
-
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-white/80 backdrop-blur-2xl rounded-t-[2.5rem] border-t border-outline-variant/20 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-          <Link className="flex flex-col items-center justify-center text-outline px-5 py-2 hover:text-primary transition-all duration-300" to={ROUTES.BUYER_MARKETPLACE}>
-            <span className="material-symbols-outlined">grid_view</span>
-            <span className="font-label text-[10px] font-bold uppercase tracking-wider mt-1">Market</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center bg-primary text-white rounded-full px-6 py-2.5 shadow-lg shadow-primary/30 transition-all duration-300" to={ROUTES.FARMER_PARSED_SUMMARY}>
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
-            <span className="font-label text-[10px] font-bold uppercase tracking-wider mt-1">My Trades</span>
-          </Link>
-          <Link className="flex flex-col items-center justify-center text-outline px-5 py-2 hover:text-primary transition-all duration-300" to={ROUTES.PROTOTYPE}>
-            <span className="material-symbols-outlined">account_circle</span>
-            <span className="font-label text-[10px] font-bold uppercase tracking-wider mt-1">Profile</span>
-          </Link>
-        </nav>
-      </>
+      </FarmerShell>
     </PrototypePageFrame>
   )
 }

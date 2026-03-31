@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 
+import BuyerShell from "@/components/BuyerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { ROUTES } from "@/prototype/routes"
 
@@ -75,7 +76,11 @@ function ReservationConfirmedPage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
+      <BuyerShell
+        activeNav="reservations"
+        backTo={ROUTES.BUYER_FUTURE_SUPPLY_READINESS}
+        headerTitle="Reservation Confirmed"
+      >
         <main className="min-h-screen flex flex-col items-center px-6 py-12 max-w-lg mx-auto">
 
         <div className="relative w-full aspect-square max-w-[320px] mb-8 group">
@@ -144,20 +149,17 @@ function ReservationConfirmedPage() {
         </div>
 
         <div className="w-full flex flex-col gap-4">
-        <button className="w-full px-10 py-5 bg-primary text-on-primary rounded-full font-headline font-bold text-lg hover:opacity-95 active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-3" onClick={() => navigate(ROUTES.PROTOTYPE)} type="button">
+        <button className="w-full px-10 py-5 bg-primary text-on-primary rounded-full font-headline font-bold text-lg hover:opacity-95 active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-3" onClick={() => navigate(ROUTES.BUYER_MARKETPLACE)} type="button">
         <span className="material-symbols-outlined">inventory_2</span>
-                        Manage My Commitments
+                        Browse More Supply
                     </button>
-        <button className="w-full px-10 py-5 bg-surface-container-high text-primary rounded-full font-headline font-bold text-lg hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3" onClick={() => navigate(ROUTES.BUYER_MARKETPLACE)} type="button">
-        <span className="material-symbols-outlined">storefront</span>
-                        Back to Marketplace
+        <button className="w-full px-10 py-5 bg-surface-container-high text-primary rounded-full font-headline font-bold text-lg hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3" onClick={() => navigate(ROUTES.HOME)} type="button">
+        <span className="material-symbols-outlined">home</span>
+                        Return Home
                     </button>
         </div>
         </main>
-        <footer className="py-12 text-center opacity-40">
-        <p className="font-headline font-black text-[#334F2B] tracking-tighter text-sm">TaniTrade AI</p>
-        </footer>
-      </>
+      </BuyerShell>
     </PrototypePageFrame>
   )
 }

@@ -1,5 +1,6 @@
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
+import BuyerShell from "@/components/BuyerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { ROUTES } from "@/prototype/routes"
 
@@ -75,20 +76,7 @@ function BuyerMarketplacePage() {
       styles={styles}
       themeStyle={themeStyle}
     >
-      <>
-        <header className="w-full top-0 sticky z-40 bg-surface/90 backdrop-blur-md">
-        <div className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
-        <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30">
-        <img alt="User profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIfedCV03dBIrmZdY_HEkBCbFWZ0U-KrV3FCKM561c5xfB8sdOq10vfPhdwrcVOqOt4Gh6u72aggFwDOjZQpLCU6_CEMQFuZ322DBIXAH-lm-H48PlxLfodPMlekWvdPQjON1onoC_3ulJGzLSiDsk6RntmzhEAYmBbHtfGml0_bwsG_ufToZ5WXmvllahxDwhybHbC5GSJGB8zSSnQ46bx5tECnMN87xvF06AlGgtxgi12a7-vcZtsFkM4T6i6GWCBHf_aX5UXZU" />
-        </div>
-        <h1 className="font-headline font-extrabold text-primary tracking-tight text-lg">TaniTrade AI</h1>
-        </div>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors" onClick={() => navigate(ROUTES.PROTOTYPE)} type="button">
-        <span className="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
-        </button>
-        </div>
-        </header>
+      <BuyerShell activeNav="marketplace" headerTitle="Buyer Marketplace">
         <main className="max-w-md mx-auto px-6 pt-4 space-y-10">
 
         <section className="relative">
@@ -115,8 +103,8 @@ function BuyerMarketplacePage() {
         </div>
         <span className="text-[10px] font-semibold text-white/80">Active Interest</span>
         </div>
-        <button className="bg-white text-primary hover:bg-surface-bright font-bold py-3 px-6 rounded-full text-sm transition-all shadow-lg active:scale-95" onClick={() => navigate(ROUTES.BUYER_RESERVATION_CONFIRMED)} type="button">
-                            Reserve Now
+        <button className="bg-white text-primary hover:bg-surface-bright font-bold py-3 px-6 rounded-full text-sm transition-all shadow-lg active:scale-95" onClick={() => navigate(ROUTES.BUYER_FUTURE_SUPPLY_READINESS)} type="button">
+                            Review Supply
                         </button>
         </div>
         </div>
@@ -245,21 +233,7 @@ function BuyerMarketplacePage() {
         </div>
         </section>
         </main>
-        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-surface/80 backdrop-blur-xl rounded-t-[2.5rem] border-t border-outline-variant/10 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
-        <Link className="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:bg-primary/5 rounded-full transition-all" to={ROUTES.BUYER_MARKETPLACE}>
-        <span className="material-symbols-outlined" data-icon="home">home</span>
-        <span className="text-[10px] font-bold uppercase tracking-wider mt-1">Market</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-6 py-2.5 transition-all shadow-lg shadow-primary/20" to={ROUTES.BUYER_RESERVATION_CONFIRMED}>
-        <span className="material-symbols-outlined" data-icon="assignment_turned_in" style={{ fontVariationSettings: "'FILL' 1" }}>assignment_turned_in</span>
-        <span className="text-[10px] font-bold uppercase tracking-wider mt-1">Reservations</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center text-primary/40 px-5 py-2 hover:bg-primary/5 rounded-full transition-all" to={ROUTES.PROTOTYPE}>
-        <span className="material-symbols-outlined" data-icon="person">person</span>
-        <span className="text-[10px] font-bold uppercase tracking-wider mt-1">Profile</span>
-        </Link>
-        </nav>
-      </>
+      </BuyerShell>
     </PrototypePageFrame>
   )
 }
