@@ -12,7 +12,6 @@ from app.services.ai.orchestrator import (
     IntakeAiResult,
 )
 from app.services.ai.schemas import (
-    GeminiHarvestListingCopy,
     GeminiIntakeExtraction,
     GeminiProposalExplanation,
 )
@@ -25,7 +24,7 @@ class FakeGeminiClient:
         self,
         *,
         parsed=None,
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-3.1-flash-lite-preview",
         error: Exception | None = None,
     ) -> None:
         self.parsed = parsed
@@ -87,8 +86,8 @@ class FarmerAiOrchestratorTests(unittest.TestCase):
         )
         orchestrator = FarmerAiOrchestrator(
             client=client,
-            primary_model="gemini-2.5-flash",
-            listing_model="gemini-2.5-flash",
+            primary_model="gemini-3.1-flash-lite-preview",
+            listing_model="gemini-3.1-flash-lite-preview",
             fallback_enabled=True,
         )
 
@@ -108,15 +107,15 @@ class FarmerAiOrchestratorTests(unittest.TestCase):
         self.assertEqual(result.parsed_intake.urgency, "high")
         self.assertEqual(result.parsed_intake.confidence, 0.88)
         self.assertFalse(result.metadata.fallback_used)
-        self.assertEqual(result.metadata.model_name, "gemini-2.5-flash")
+        self.assertEqual(result.metadata.model_name, "gemini-3.1-flash-lite-preview")
         self.assertEqual(len(client.calls), 1)
 
     def test_extract_intake_falls_back_when_gemini_fails(self) -> None:
         client = FakeGeminiClient(error=GeminiAiClientError("timeout"))
         orchestrator = FarmerAiOrchestrator(
             client=client,
-            primary_model="gemini-2.5-flash",
-            listing_model="gemini-2.5-flash",
+            primary_model="gemini-3.1-flash-lite-preview",
+            listing_model="gemini-3.1-flash-lite-preview",
             fallback_enabled=True,
         )
         raw_text = "Saya ada 5 bags baja nitrogen lebih dan perlukan racun organik minggu depan."
@@ -135,8 +134,8 @@ class FarmerAiOrchestratorTests(unittest.TestCase):
         client = FakeGeminiClient(error=GeminiAiClientError("invalid json"))
         orchestrator = FarmerAiOrchestrator(
             client=client,
-            primary_model="gemini-2.5-flash",
-            listing_model="gemini-2.5-flash",
+            primary_model="gemini-3.1-flash-lite-preview",
+            listing_model="gemini-3.1-flash-lite-preview",
             fallback_enabled=False,
         )
 
@@ -151,8 +150,8 @@ class FarmerAiOrchestratorTests(unittest.TestCase):
         client = FakeGeminiClient(error=GeminiAiClientError("proposal unavailable"))
         orchestrator = FarmerAiOrchestrator(
             client=client,
-            primary_model="gemini-2.5-flash",
-            listing_model="gemini-2.5-flash",
+            primary_model="gemini-3.1-flash-lite-preview",
+            listing_model="gemini-3.1-flash-lite-preview",
             fallback_enabled=True,
         )
         fallback_explanation = "Value parity uses seeded market references."
@@ -173,19 +172,14 @@ class FarmerAiOrchestratorTests(unittest.TestCase):
         self.assertEqual(result.explanation, fallback_explanation)
         self.assertTrue(result.metadata.fallback_used)
 
-    def test_generate_listing_copy_uses_structured_ai_output(self) -> None:
+    def test_generate_listing_copy_uses_text_output(self) -> None:
         client = FakeGeminiClient(
-            parsed=GeminiHarvestListingCopy(
-                listing_title="Projected Premium Paddy Supply",
-                listing_note="Projected paddy supply with tracked inputs and a clear reservation window.",
-                soil_vitality_label="Balanced Soil",
-                yield_probability_label="High Readiness",
-            )
+            parsed="Projected paddy supply with tracked inputs and a clear reservation window."
         )
         orchestrator = FarmerAiOrchestrator(
             client=client,
-            primary_model="gemini-2.5-flash",
-            listing_model="gemini-2.5-flash",
+            primary_model="gemini-3.1-flash-lite-preview",
+            listing_model="gemini-3.1-flash-lite-preview",
             fallback_enabled=True,
         )
 
@@ -220,17 +214,18 @@ class FarmerAiOrchestratorTests(unittest.TestCase):
             fallback_yield_probability_label="Grade A Premium",
         )
 
-        self.assertEqual(result.listing_title, "Projected Premium Paddy Supply")
-        self.assertEqual(result.soil_vitality_label, "Balanced Soil")
-        self.assertEqual(result.yield_probability_label, "High Readiness")
+        self.assertEqual(
+            result.listing_note,
+            "Projected paddy supply with tracked inputs and a clear reservation window.",
+        )
         self.assertFalse(result.metadata.fallback_used)
 
     def test_generate_proposal_copy_uses_text_output(self) -> None:
         client = FakeGeminiClient(parsed="Fair trade based on seeded market references and practical handover quantities.")
         orchestrator = FarmerAiOrchestrator(
             client=client,
-            primary_model="gemini-2.5-flash",
-            listing_model="gemini-2.5-flash",
+            primary_model="gemini-3.1-flash-lite-preview",
+            listing_model="gemini-3.1-flash-lite-preview",
             fallback_enabled=True,
         )
 
@@ -272,13 +267,12 @@ class GeminiAiClientParsingTests(unittest.TestCase):
         response = type(
             "FakeResponse",
             (),
-            {"text": '```json\n{"listing_title":"Projected Paddy Supply","listing_note":"Projected volume based on planted area.","soil_vitality_label":"Balanced Soil","yield_probability_label":"High Readiness"}\n```'},
+            {"text": '```json\n{"explanation":"Fair trade based on projected supply context."}\n```'},
         )()
 
-        parsed = client._coerce_parsed_response(GeminiHarvestListingCopy, response)
+        parsed = client._coerce_parsed_response(GeminiProposalExplanation, response)
 
-        self.assertEqual(parsed.listing_title, "Projected Paddy Supply")
-        self.assertEqual(parsed.soil_vitality_label, "Balanced Soil")
+        self.assertEqual(parsed.explanation, "Fair trade based on projected supply context.")
 
 
 class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
@@ -357,7 +351,7 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
         ai_orchestrator.extract_intake.return_value = IntakeAiResult(
             parsed_intake=parsed,
             metadata=AiGenerationMetadata(
-                model_name="gemini-2.5-flash",
+                model_name="gemini-3.1-flash-lite-preview",
                 prompt_version="intake-v1",
             ),
         )
@@ -539,6 +533,117 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
         self.assertEqual(response.proposal_id, "proposal-123")
         self.assertEqual(response.explanation, "Existing proposal")
         repo.create_proposal.assert_not_called()
+
+    def test_create_or_update_planting_preserves_user_crop_label(self) -> None:
+        repo = Mock()
+        repo.get_trade.return_value = {
+            "id": "trade-123",
+            "request_id": "request-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "status": "accepted",
+        }
+        repo.get_barter_request.return_value = {
+            "id": "request-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "crop_code": "paddy",
+        }
+        repo.get_crop_profile.return_value = {
+            "crop_code": "paddy",
+            "label": "Paddy (MR269)",
+            "growth_days": 110,
+            "yield_min_kg_per_hectare": 4200,
+            "yield_max_kg_per_hectare": 5600,
+            "default_quality_band": "Grade A",
+        }
+        repo.get_planting_record_by_trade.return_value = None
+        repo.create_planting_record.return_value = {
+            "id": "planting-123",
+            "trade_id": "trade-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "crop_code": "paddy",
+            "crop_label": "Premium Paddy MR888",
+            "planting_date": "2026-04-01",
+            "area_value": 2.5,
+            "area_unit": "hectares",
+            "area_hectares": 2.5,
+            "input_summary": "testing",
+            "snapshot": {
+                "canonical_crop_label": "Paddy (MR269)",
+                "soil_vitality_label": "Stable Soil Health",
+                "yield_probability_label": "Grade A",
+            },
+        }
+        repo.get_harvest_listing_by_planting.return_value = None
+        repo.create_harvest_listing.return_value = {
+            "id": "listing-123",
+            "planting_record_id": "planting-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "crop_code": "paddy",
+            "crop_label": "Premium Paddy MR888",
+            "listing_title": "Future Premium Paddy MR888 Supply",
+            "estimated_yield_min_kg": 10500,
+            "estimated_yield_max_kg": 14000,
+            "harvest_window_start": "2026-07-13",
+            "harvest_window_end": "2026-07-27",
+            "quality_band": "Grade A",
+            "confidence_score": 91.5,
+            "reservation_discount_pct": 10,
+            "early_incentive_label": "10% off for reservations",
+            "listing_note": "High-quality crop grown with carefully tracked inputs.",
+            "status": "draft",
+            "snapshot": {
+                "canonical_crop_label": "Paddy (MR269)",
+                "soil_vitality_label": "Stable Soil Health",
+                "yield_probability_label": "Grade A",
+            },
+        }
+        repo.list_buyers.return_value = [
+            {"id": "buyer-1", "display_name": "Mak Teh Grocer", "avatar_url": None},
+        ]
+        repo.replace_listing_interests.return_value = [
+            {
+                "id": "interest-1",
+                "harvest_listing_id": "listing-123",
+                "buyer_profile_id": "buyer-1",
+                "interest_type": "watching",
+                "reserved_quantity_kg": None,
+                "note": "Seeded demand for Premium Paddy MR888",
+            },
+        ]
+        repo.update_barter_request.return_value = {"id": "request-123"}
+
+        ai_orchestrator = Mock()
+        ai_orchestrator.generate_listing_copy.return_value = Mock(
+            listing_note="Projected premium paddy supply with tracked inputs and a clear reservation window.",
+            metadata=Mock(to_snapshot=Mock(return_value={"provider": "gemini"})),
+        )
+
+        service = FarmerWorkflowService(
+            repo=repo,
+            demo_farmer_profile_id="11111111-1111-1111-1111-111111111111",
+            ai_orchestrator=ai_orchestrator,
+        )
+
+        from app.schemas.farmer_flow import PlantingCreateRequest
+
+        response = service.create_or_update_planting(
+            "trade-123",
+            PlantingCreateRequest(
+                crop_type="Premium Paddy MR888",
+                planting_date="2026-04-01",
+                area_value=2.5,
+                area_unit="hectares",
+                input_summary="testing",
+            ),
+        )
+
+        create_planting_payload = repo.create_planting_record.call_args.args[0]
+        create_listing_payload = repo.create_harvest_listing.call_args.args[0]
+
+        self.assertEqual(create_planting_payload["crop_label"], "Premium Paddy MR888")
+        self.assertEqual(create_listing_payload["crop_label"], "Premium Paddy MR888")
+        self.assertEqual(create_listing_payload["listing_title"], "Future Premium Paddy MR888 Supply")
+        self.assertEqual(response.crop_label, "Premium Paddy MR888")
 
 
 if __name__ == "__main__":

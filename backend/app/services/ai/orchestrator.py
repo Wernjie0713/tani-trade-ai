@@ -21,11 +21,7 @@ from app.services.ai.prompts import (
     build_proposal_system_prompt,
     build_proposal_user_prompt,
 )
-from app.services.ai.schemas import (
-    GeminiBarterItemExtraction,
-    GeminiHarvestListingCopy,
-    GeminiIntakeExtraction,
-)
+from app.services.ai.schemas import GeminiBarterItemExtraction, GeminiIntakeExtraction
 from app.services.catalog import (
     UNIT_ALIASES,
     crop_label,
@@ -78,10 +74,7 @@ class ProposalCopyResult:
 
 @dataclass(slots=True)
 class ListingCopyResult:
-    listing_title: str
     listing_note: str
-    soil_vitality_label: str
-    yield_probability_label: str
     metadata: AiGenerationMetadata
 
 
@@ -211,15 +204,12 @@ class FarmerAiOrchestrator:
     ) -> ListingCopyResult:
         if self.client is None:
             return self._fallback_listing(
-                fallback_listing_title,
                 fallback_listing_note,
-                fallback_soil_vitality_label,
-                fallback_yield_probability_label,
                 "Gemini API key is not configured.",
             )
 
         try:
-            result = self.client.generate_structured(
+            result = self.client.generate_text(
                 operation="listing",
                 model=self.listing_model,
                 system_instruction=build_listing_system_prompt(),
@@ -234,33 +224,34 @@ class FarmerAiOrchestrator:
                         fallback_yield_probability_label=fallback_yield_probability_label,
                     ),
                 ),
-                response_schema=GeminiHarvestListingCopy,
                 temperature=0.4,
                 max_output_tokens=320,
             )
+            listing_note = result.text.strip()
+            if not listing_note:
+                raise ValueError("Gemini returned an empty listing note.")
             self._log_success(
                 "listing",
                 result.model_name,
                 LISTING_PROMPT_VERSION,
-                f"crop={crop_profile['crop_code']} quality={result.parsed.yield_probability_label.strip()}",
+                f"crop={crop_profile['crop_code']} note_generated=true",
             )
             return ListingCopyResult(
-                listing_title=result.parsed.listing_title.strip(),
-                listing_note=result.parsed.listing_note.strip(),
-                soil_vitality_label=result.parsed.soil_vitality_label.strip(),
-                yield_probability_label=result.parsed.yield_probability_label.strip(),
+                listing_note=listing_note,
                 metadata=AiGenerationMetadata(
                     model_name=result.model_name,
                     prompt_version=LISTING_PROMPT_VERSION,
                     fallback_used=False,
                 ),
             )
-        except GeminiAiClientError as exc:
+        except (GeminiAiClientError, ValueError) as exc:
+            if isinstance(exc, ValueError) and self.debug_logging:
+                logger.warning(
+                    "[AI] Raw listing response preview before fallback: %s",
+                    self._preview_text(result.text) if "result" in locals() else "<no response text>",
+                )
             return self._fallback_or_raise_listing(
-                fallback_listing_title,
                 fallback_listing_note,
-                fallback_soil_vitality_label,
-                fallback_yield_probability_label,
                 str(exc),
             )
 
@@ -386,36 +377,24 @@ class FarmerAiOrchestrator:
 
     def _fallback_or_raise_listing(
         self,
-        fallback_listing_title: str,
         fallback_listing_note: str,
-        fallback_soil_vitality_label: str,
-        fallback_yield_probability_label: str,
         reason: str,
     ) -> ListingCopyResult:
         if self.fallback_enabled:
             return self._fallback_listing(
-                fallback_listing_title,
                 fallback_listing_note,
-                fallback_soil_vitality_label,
-                fallback_yield_probability_label,
                 reason,
             )
         raise FarmerAiOrchestratorError(reason)
 
     def _fallback_listing(
         self,
-        fallback_listing_title: str,
         fallback_listing_note: str,
-        fallback_soil_vitality_label: str,
-        fallback_yield_probability_label: str,
         reason: str,
     ) -> ListingCopyResult:
         self._log_fallback("listing", reason)
         return ListingCopyResult(
-            listing_title=fallback_listing_title,
             listing_note=fallback_listing_note,
-            soil_vitality_label=fallback_soil_vitality_label,
-            yield_probability_label=fallback_yield_probability_label,
             metadata=AiGenerationMetadata(
                 prompt_version=LISTING_PROMPT_VERSION,
                 fallback_used=True,
@@ -425,6 +404,12 @@ class FarmerAiOrchestrator:
 
     def _log_fallback(self, operation: str, reason: str) -> None:
         logger.warning("[AI] Falling back to deterministic %s flow: %s", operation, reason)
+
+    def _preview_text(self, text: str, limit: int = 400) -> str:
+        compact = " | ".join(line.strip() for line in text.splitlines() if line.strip())
+        if len(compact) <= limit:
+            return compact
+        return f"{compact[:limit]}..."
 
     def _log_success(
         self,

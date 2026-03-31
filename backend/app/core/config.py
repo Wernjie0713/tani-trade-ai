@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     firebase_credentials_path: str = ""
     firebase_service_account_json: str = ""
     gemini_api_key: str = ""
-    gemini_model_primary: str = "gemini-2.5-flash"
-    gemini_model_listing: str = "gemini-2.5-flash"
+    gemini_model_primary: str = "gemini-3.1-flash-lite-preview"
+    gemini_model_listing: str = "gemini-3.1-flash-lite-preview"
     gemini_timeout_seconds: int = 20
     gemini_max_retries: int = 2
     ai_fallback_enabled: bool = True

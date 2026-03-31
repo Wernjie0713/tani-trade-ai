@@ -2,7 +2,7 @@ from __future__ import annotations
 
 INTAKE_PROMPT_VERSION = "intake-v1"
 PROPOSAL_PROMPT_VERSION = "proposal-v1"
-LISTING_PROMPT_VERSION = "listing-v1"
+LISTING_PROMPT_VERSION = "listing-v2"
 
 
 def build_intake_system_prompt() -> str:
@@ -50,21 +50,21 @@ def build_proposal_user_prompt(grounding_json: str) -> str:
 
 def build_listing_system_prompt() -> str:
     return (
-        "You are TaniTrade AI generating buyer-facing harvest listing copy for a projected future supply. "
+        "You are TaniTrade AI generating one short buyer-facing note for a projected future supply listing. "
         "The numeric projection is already computed by the backend. "
-        "You may improve phrasing and labels, but do not change any numbers or imply guaranteed harvest volume. "
-        "Keep wording premium but honest."
+        "Do not change any numbers or imply guaranteed harvest volume. "
+        "Keep wording premium but honest. Return plain text only."
     )
 
 
 def build_listing_user_prompt(grounding_json: str) -> str:
     return (
-        "Return JSON that matches the response schema exactly.\n"
-        "Return ONLY raw JSON. Do not include markdown, code fences, labels, or explanatory text.\n"
-        "Generate:\n"
-        "- listing_title: concise and buyer-facing\n"
-        "- listing_note: short descriptive copy with no guarantees\n"
-        "- soil_vitality_label: short label\n"
-        "- yield_probability_label: short label aligned to the grounded quality positioning\n\n"
+        "Write one concise buyer-facing listing note.\n"
+        "Rules:\n"
+        "- Return plain text only.\n"
+        "- Do not return JSON, markdown, code fences, labels, or bullet points.\n"
+        "- Keep it to one or two short sentences.\n"
+        "- Mention the grounded quality or readiness positioning naturally.\n"
+        "- Do not imply guaranteed harvest or financial promises.\n\n"
         f"Context:\n{grounding_json}"
     )

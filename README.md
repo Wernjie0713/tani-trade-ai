@@ -2,13 +2,13 @@
 
 TaniTrade AI is a hackathon project for Malaysian smallholder farmers. It is an agentic agrotech platform that helps farmers barter surplus farm inputs for missing resources, then turn projected harvest into advance buyer commitments to unlock working capital before harvest.
 
-This repository currently contains the prototype scaffold:
+This repository currently contains a working MVP scaffold:
 
 - `frontend/`: React + Vite + Tailwind CSS v4 + shadcn/ui
 - `backend/`: FastAPI
 - `database`: Firebase Firestore
 
-The product vision is larger than the current scaffold. The README below explains both the concept and the current implementation state.
+The product vision is larger than the current MVP. The README below explains both the concept and the current implementation state.
 
 ## Problem
 
@@ -190,7 +190,7 @@ Good candidates for a future small RAG layer:
 - buyer requirement docs from restaurants, grocers, or distributors
 - location and distance metadata for local matching
 
-## Current Prototype Status
+## Current MVP Status
 
 What is already implemented in this repository:
 
@@ -200,6 +200,8 @@ What is already implemented in this repository:
 - Gemini-backed AI services for intake extraction, proposal explanation, and listing generation
 - deterministic matching, valuation, and projection services
 - local logging for AI request/fallback visibility
+
+This should be presented as a working MVP rather than a static prototype. New farmer actions are processed live through the backend and persisted in Firebase, while counterparty supply and buyer interest remain seeded to keep the hackathon demo reliable.
 
 What is planned next for the MVP:
 

@@ -396,7 +396,9 @@ class FarmerWorkflowService:
             )
 
         request_row = self._require_request(trade["request_id"])
-        crop_code = find_crop_code(payload.crop_type) or request_row["crop_code"]
+        crop_input_label = payload.crop_type.strip()
+        crop_code = find_crop_code(crop_input_label) or request_row["crop_code"]
+        canonical_crop_label = crop_label(crop_code)
         crop_profile = self.repo.get_crop_profile(crop_code)
         if crop_profile is None:
             raise HTTPException(
@@ -412,7 +414,7 @@ class FarmerWorkflowService:
             input_summary=payload.input_summary,
         )
 
-        fallback_listing_title = f"Future {crop_label(crop_code)} Supply"
+        fallback_listing_title = f"Future {crop_input_label} Supply"
         fallback_listing_note = projection.listing_note
         fallback_soil_vitality_label = projection.soil_vitality_label
         fallback_yield_probability_label = projection.yield_probability_label
@@ -422,13 +424,14 @@ class FarmerWorkflowService:
             "trade_id": trade_id,
             "farmer_profile_id": self.demo_farmer_profile_id,
             "crop_code": crop_code,
-            "crop_label": crop_label(crop_code),
+            "crop_label": crop_input_label,
             "planting_date": payload.planting_date.isoformat(),
             "area_value": payload.area_value,
             "area_unit": payload.area_unit,
             "area_hectares": projection.area_hectares,
             "input_summary": payload.input_summary,
             "snapshot": {
+                "canonical_crop_label": canonical_crop_label,
                 "soil_vitality_label": projection.soil_vitality_label,
                 "yield_probability_label": projection.yield_probability_label,
             },
@@ -450,7 +453,7 @@ class FarmerWorkflowService:
             "planting_record_id": planting_row["id"],
             "farmer_profile_id": self.demo_farmer_profile_id,
             "crop_code": crop_code,
-            "crop_label": crop_label(crop_code),
+            "crop_label": crop_input_label,
             "listing_title": fallback_listing_title,
             "estimated_yield_min_kg": projection.estimated_yield_min_kg,
             "estimated_yield_max_kg": projection.estimated_yield_max_kg,
@@ -473,15 +476,13 @@ class FarmerWorkflowService:
                 fallback_soil_vitality_label=fallback_soil_vitality_label,
                 fallback_yield_probability_label=fallback_yield_probability_label,
             )
-            listing_title = listing_copy.listing_title
             listing_note = listing_copy.listing_note
-            soil_vitality_label = listing_copy.soil_vitality_label
-            yield_probability_label = listing_copy.yield_probability_label
             listing_snapshot_ai = listing_copy.metadata.to_snapshot()
 
         listing_payload["listing_title"] = listing_title
         listing_payload["listing_note"] = listing_note
         listing_payload["snapshot"] = {
+            "canonical_crop_label": canonical_crop_label,
             "soil_vitality_label": soil_vitality_label,
             "yield_probability_label": yield_probability_label,
         }
@@ -502,7 +503,7 @@ class FarmerWorkflowService:
                     "buyer_profile_id": buyer["id"],
                     "interest_type": "watching",
                     "reserved_quantity_kg": None,
-                    "note": f"Seeded demand for {crop_label(crop_code)}",
+                    "note": f"Seeded demand for {crop_input_label}",
                 }
                 for buyer in buyers
             ],
