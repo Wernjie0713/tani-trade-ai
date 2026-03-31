@@ -6,7 +6,7 @@ This repository currently contains the prototype scaffold:
 
 - `frontend/`: React + Vite + Tailwind CSS v4 + shadcn/ui
 - `backend/`: FastAPI
-- `database/auth`: Supabase
+- `database`: Firebase Firestore
 
 The product vision is larger than the current scaffold. The README below explains both the concept and the current implementation state.
 
@@ -117,7 +117,7 @@ Without the AI layer, the core workflow breaks down into manual searching and ne
 
 - Frontend: React 19, Vite, Tailwind CSS v4, shadcn/ui
 - Backend: FastAPI
-- Database/Auth: Supabase
+- Database: Firebase Firestore via Firebase Admin SDK
 - AI integration: Gemini API via backend services
 - Local dev: Node.js + Python virtual environment
 
@@ -130,7 +130,7 @@ The current backend is intentionally split into two layers:
   - proposal explanation generation
   - harvest listing copy generation
 - Deterministic backend services
-  - inventory filtering from Supabase
+  - inventory filtering from Firestore
   - distance calculation
   - match ranking
   - fair-value barter ratio math
@@ -174,7 +174,7 @@ This would create a stronger hybrid story for the hackathon:
 
 Current structured grounding already used by the backend:
 
-- Supabase inventory rows
+- Firestore inventory documents
 - market price references
 - crop profiles
 - meeting points
@@ -196,7 +196,7 @@ What is already implemented in this repository:
 
 - route-based frontend farmer flow wired to the backend
 - FastAPI farmer workflow endpoints from intake to harvest listing draft
-- Supabase schema, seed data, and seeded demo identities
+- Firebase seed data and seeded demo identities
 - Gemini-backed AI services for intake extraction, proposal explanation, and listing generation
 - deterministic matching, valuation, and projection services
 - local logging for AI request/fallback visibility
@@ -238,7 +238,11 @@ backend/
     api/
     core/
     db/
+  scripts/
   requirements.txt
+
+firebase/
+  seed_data.json
 
 frontend/
   src/
@@ -253,7 +257,7 @@ frontend/
 
 - Node.js 22+
 - Python 3.11+
-- a Supabase project
+- a Firebase project with Firestore enabled
 
 ### Environment files
 
@@ -262,12 +266,15 @@ Copy-Item backend\.env.example backend\.env
 Copy-Item frontend\.env.example frontend\.env
 ```
 
+Place your Firebase service account JSON file in `backend/service-account.json`, or set `FIREBASE_SERVICE_ACCOUNT_JSON` directly in `backend/.env`.
+
 ### Backend setup
 
 ```powershell
 python -m venv backend\.venv
 backend\.venv\Scripts\Activate.ps1
 pip install -r backend\requirements.txt
+python backend\scripts\seed_firestore.py
 uvicorn app.main:app --reload --app-dir backend --port 8010
 ```
 
@@ -299,8 +306,9 @@ Frontend URL:
 APP_NAME=TaniTrade AI API
 API_V1_PREFIX=/api/v1
 FRONTEND_URL=http://localhost:5173
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_CREDENTIALS_PATH=service-account.json
+FIREBASE_SERVICE_ACCOUNT_JSON=
 GEMINI_API_KEY=your-gemini-api-key
 ```
 
@@ -310,8 +318,6 @@ GEMINI_API_KEY=your-gemini-api-key
 
 ```env
 VITE_API_BASE_URL=http://localhost:8010/api/v1
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 ```
 
 ## Demo Narrative

@@ -4,7 +4,7 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from postgrest.exceptions import APIError as PostgrestAPIError
+from google.api_core.exceptions import GoogleAPICallError
 
 from app.api.router import api_router
 from app.core.config import get_settings
@@ -40,12 +40,12 @@ def handle_httpx_error(_: Request, exc: httpx.HTTPError) -> JSONResponse:
     )
 
 
-@app.exception_handler(PostgrestAPIError)
-def handle_postgrest_error(_: Request, exc: PostgrestAPIError) -> JSONResponse:
-    logger.exception("Supabase API error", exc_info=exc)
+@app.exception_handler(GoogleAPICallError)
+def handle_firestore_error(_: Request, exc: GoogleAPICallError) -> JSONResponse:
+    logger.exception("Firebase API error", exc_info=exc)
     return JSONResponse(
         status_code=502,
-        content={"detail": "Supabase rejected the request. Check your schema, RLS, and service key."},
+        content={"detail": "Firebase rejected the request. Check your Firestore setup and service account."},
     )
 
 

@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 
 from app.core.config import Settings, get_settings
-from app.db.supabase import get_supabase_client
+from app.db.firebase import get_firestore_client
 from app.repositories.farmer_workflow import FarmerWorkflowRepository
 from app.services.ai.client import GeminiAiClient
 from app.services.ai.orchestrator import FarmerAiOrchestrator
@@ -11,11 +11,14 @@ from app.services.farmer_flow import FarmerWorkflowService
 def get_farmer_workflow_service(
     settings: Settings = Depends(get_settings),
 ) -> FarmerWorkflowService:
-    client = get_supabase_client()
+    client = get_firestore_client()
     if client is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Supabase is not configured. Set SUPABASE_URL and SUPABASE_SECRET_KEY.",
+            detail=(
+                "Firebase is not configured. Set FIREBASE_PROJECT_ID and either "
+                "FIREBASE_CREDENTIALS_PATH or FIREBASE_SERVICE_ACCOUNT_JSON."
+            ),
         )
 
     ai_client = None

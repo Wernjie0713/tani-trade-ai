@@ -1,41 +1,42 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
+from uuid import uuid4
 
-from supabase import Client
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 class FarmerWorkflowRepository:
-    def __init__(self, client: Client) -> None:
+    def __init__(self, client: Any) -> None:
         self.client = client
 
     def get_profile(self, profile_id: str) -> dict[str, Any] | None:
         return self._select_first("profiles", {"id": profile_id})
 
     def list_inventory_by_owner(self, profile_id: str) -> list[dict[str, Any]]:
-        return (
-            self.client.table("inventory_items")
-            .select("*")
-            .eq("owner_profile_id", profile_id)
-            .eq("availability_status", "available")
-            .order("created_at")
-            .execute()
-            .data
-            or []
+        rows = self._list_rows("inventory_items")
+        return sorted(
+            [
+                row
+                for row in rows
+                if row.get("owner_profile_id") == profile_id
+                and row.get("availability_status") == "available"
+            ],
+            key=lambda row: row.get("created_at", ""),
         )
 
     def get_profiles_by_ids(self, profile_ids: list[str]) -> dict[str, dict[str, Any]]:
         if not profile_ids:
             return {}
-
-        rows = (
-            self.client.table("profiles")
-            .select("*")
-            .in_("id", profile_ids)
-            .execute()
-            .data
-            or []
-        )
+        profile_set = set(profile_ids)
+        rows = [
+            row
+            for row in self._list_rows("profiles")
+            if row.get("id") in profile_set
+        ]
         return {row["id"]: row for row in rows}
 
     def get_latest_active_flow(self, profile_id: str) -> dict[str, str | None]:
@@ -71,14 +72,13 @@ class FarmerWorkflowRepository:
         return self._select_first("barter_requests", {"id": request_id})
 
     def list_barter_request_items(self, request_id: str) -> list[dict[str, Any]]:
-        return (
-            self.client.table("barter_request_items")
-            .select("*")
-            .eq("request_id", request_id)
-            .order("created_at")
-            .execute()
-            .data
-            or []
+        return sorted(
+            [
+                row
+                for row in self._list_rows("barter_request_items")
+                if row.get("request_id") == request_id
+            ],
+            key=lambda row: row.get("created_at", ""),
         )
 
     def update_barter_request(self, request_id: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -89,17 +89,15 @@ class FarmerWorkflowRepository:
         normalized_item_name: str,
         exclude_owner_profile_id: str,
     ) -> int:
-        rows = (
-            self.client.table("inventory_items")
-            .select("id")
-            .eq("normalized_item_name", normalized_item_name)
-            .neq("owner_profile_id", exclude_owner_profile_id)
-            .eq("availability_status", "available")
-            .execute()
-            .data
-            or []
+        return len(
+            [
+                row
+                for row in self._list_rows("inventory_items")
+                if row.get("normalized_item_name") == normalized_item_name
+                and row.get("owner_profile_id") != exclude_owner_profile_id
+                and row.get("availability_status") == "available"
+            ],
         )
-        return len(rows)
 
     def list_candidate_inventory(
         self,
@@ -107,32 +105,27 @@ class FarmerWorkflowRepository:
         category: str,
         exclude_owner_profile_id: str,
     ) -> list[dict[str, Any]]:
-        exact_rows = (
-            self.client.table("inventory_items")
-            .select("*")
-            .eq("normalized_item_name", normalized_item_name)
-            .neq("owner_profile_id", exclude_owner_profile_id)
-            .eq("availability_status", "available")
-            .execute()
-            .data
-            or []
-        )
+        rows = self._list_rows("inventory_items")
+        exact_rows = [
+            row
+            for row in rows
+            if row.get("normalized_item_name") == normalized_item_name
+            and row.get("owner_profile_id") != exclude_owner_profile_id
+            and row.get("availability_status") == "available"
+        ]
         if exact_rows:
             return exact_rows
 
-        return (
-            self.client.table("inventory_items")
-            .select("*")
-            .eq("category", category)
-            .neq("owner_profile_id", exclude_owner_profile_id)
-            .eq("availability_status", "available")
-            .execute()
-            .data
-            or []
-        )
+        return [
+            row
+            for row in rows
+            if row.get("category") == category
+            and row.get("owner_profile_id") != exclude_owner_profile_id
+            and row.get("availability_status") == "available"
+        ]
 
     def list_meeting_points(self) -> list[dict[str, Any]]:
-        return self.client.table("meeting_points").select("*").execute().data or []
+        return self._list_rows("meeting_points")
 
     def get_market_price_reference(self, normalized_item_name: str) -> dict[str, Any] | None:
         return self._select_first(
@@ -144,15 +137,12 @@ class FarmerWorkflowRepository:
         return self._select_first("crop_profiles", {"crop_code": crop_code})
 
     def list_matches(self, request_id: str) -> list[dict[str, Any]]:
-        return (
-            self.client.table("barter_matches")
-            .select("*")
-            .eq("request_id", request_id)
-            .order("rank")
-            .execute()
-            .data
-            or []
-        )
+        rows = [
+            row
+            for row in self._list_rows("barter_matches")
+            if row.get("request_id") == request_id
+        ]
+        return sorted(rows, key=lambda row: (int(row.get("rank", 0)), row.get("created_at", "")))
 
     def create_matches(self, payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return self._insert_many("barter_matches", payloads)
@@ -164,6 +154,9 @@ class FarmerWorkflowRepository:
         return self._select_first("barter_proposals", {"match_id": match_id})
 
     def create_proposal(self, payload: dict[str, Any]) -> dict[str, Any]:
+        existing = self.get_existing_proposal_for_match(payload["match_id"])
+        if existing is not None:
+            return existing
         return self._insert_one("barter_proposals", payload)
 
     def get_proposal(self, proposal_id: str) -> dict[str, Any] | None:
@@ -205,62 +198,88 @@ class FarmerWorkflowRepository:
     def get_harvest_listing(self, harvest_listing_id: str) -> dict[str, Any] | None:
         return self._select_first("harvest_listings", {"id": harvest_listing_id})
 
-    def replace_listing_interests(self, harvest_listing_id: str, payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        self.client.table("listing_buyer_interests").delete().eq("harvest_listing_id", harvest_listing_id).execute()
+    def replace_listing_interests(
+        self,
+        harvest_listing_id: str,
+        payloads: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        collection = self.client.collection("listing_buyer_interests")
+        for row in self._list_rows("listing_buyer_interests"):
+            if row.get("harvest_listing_id") == harvest_listing_id:
+                collection.document(row["id"]).delete()
         return self._insert_many("listing_buyer_interests", payloads)
 
     def list_listing_interests(self, harvest_listing_id: str) -> list[dict[str, Any]]:
-        return (
-            self.client.table("listing_buyer_interests")
-            .select("*")
-            .eq("harvest_listing_id", harvest_listing_id)
-            .order("created_at")
-            .execute()
-            .data
-            or []
-        )
+        rows = [
+            row
+            for row in self._list_rows("listing_buyer_interests")
+            if row.get("harvest_listing_id") == harvest_listing_id
+        ]
+        return sorted(rows, key=lambda row: row.get("created_at", ""))
 
     def list_buyers(self) -> list[dict[str, Any]]:
-        return (
-            self.client.table("profiles")
-            .select("*")
-            .eq("role", "buyer")
-            .order("trust_score", desc=True)
-            .execute()
-            .data
-            or []
-        )
+        rows = [
+            row
+            for row in self._list_rows("profiles")
+            if row.get("role") == "buyer"
+        ]
+        return sorted(rows, key=lambda row: float(row.get("trust_score", 0)), reverse=True)
 
-    def _select_first(self, table: str, filters: dict[str, Any]) -> dict[str, Any] | None:
-        query = self.client.table(table).select("*")
-        for key, value in filters.items():
-            query = query.eq(key, value)
-        rows = query.limit(1).execute().data or []
+    def _list_rows(self, collection_name: str) -> list[dict[str, Any]]:
+        return [
+            self._normalize_row(document.id, document.to_dict() or {})
+            for document in self.client.collection(collection_name).stream()
+        ]
+
+    def _select_first(self, collection_name: str, filters: dict[str, Any]) -> dict[str, Any] | None:
+        rows = self._filter_rows(self._list_rows(collection_name), filters)
         return rows[0] if rows else None
 
-    def _select_latest(self, table: str, filters: dict[str, Any]) -> dict[str, Any] | None:
-        query = self.client.table(table).select("*")
-        for key, value in filters.items():
-            query = query.eq(key, value)
-        rows = query.order("created_at", desc=True).limit(1).execute().data or []
+    def _select_latest(self, collection_name: str, filters: dict[str, Any]) -> dict[str, Any] | None:
+        rows = self._filter_rows(self._list_rows(collection_name), filters)
+        rows.sort(key=lambda row: row.get("created_at", ""), reverse=True)
         return rows[0] if rows else None
 
-    def _insert_one(self, table: str, payload: dict[str, Any]) -> dict[str, Any]:
-        rows = self.client.table(table).insert(payload).execute().data or []
-        return rows[0]
+    def _insert_one(self, collection_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+        doc_id = payload.get("id") or str(uuid4())
+        timestamp = _utc_now_iso()
+        row = {
+            **payload,
+            "id": doc_id,
+            "created_at": payload.get("created_at", timestamp),
+            "updated_at": payload.get("updated_at", timestamp),
+        }
+        self.client.collection(collection_name).document(doc_id).set(row)
+        return row
 
-    def _insert_many(self, table: str, payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _insert_many(self, collection_name: str, payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not payloads:
             return []
-        return self.client.table(table).insert(payloads).execute().data or []
+        return [self._insert_one(collection_name, payload) for payload in payloads]
 
-    def _update_one(self, table: str, record_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-        rows = (
-            self.client.table(table)
-            .update(payload)
-            .eq("id", record_id)
-            .execute()
-            .data
-            or []
-        )
-        return rows[0]
+    def _update_one(self, collection_name: str, record_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        existing = self._select_first(collection_name, {"id": record_id})
+        if existing is None:
+            raise KeyError(f"Document {collection_name}/{record_id} not found.")
+
+        updated = {
+            **existing,
+            **payload,
+            "id": record_id,
+            "created_at": existing.get("created_at", _utc_now_iso()),
+            "updated_at": _utc_now_iso(),
+        }
+        self.client.collection(collection_name).document(record_id).set(updated)
+        return updated
+
+    def _filter_rows(self, rows: list[dict[str, Any]], filters: dict[str, Any]) -> list[dict[str, Any]]:
+        filtered = rows
+        for key, value in filters.items():
+            filtered = [row for row in filtered if row.get(key) == value]
+        return filtered
+
+    def _normalize_row(self, document_id: str, row: dict[str, Any]) -> dict[str, Any]:
+        return {
+            **row,
+            "id": row.get("id", document_id),
+        }

@@ -1,0 +1,577 @@
+{
+  "profiles": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "role": "farmer",
+      "display_name": "Pak Karim",
+      "preferred_language": "bm",
+      "trust_score": 4.4,
+      "avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=PakKarim",
+      "village": "Kampung Titi Akar",
+      "state": "Kedah",
+      "latitude": 5.6613,
+      "longitude": 100.502,
+      "is_demo": true,
+      "created_at": "2026-03-01T00:00:00+00:00",
+      "updated_at": "2026-03-01T00:00:00+00:00"
+    },
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "role": "farmer",
+      "display_name": "Pak Abu",
+      "preferred_language": "bm",
+      "trust_score": 4.8,
+      "avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=PakAbu",
+      "village": "Kampung Baru",
+      "state": "Kedah",
+      "latitude": 5.674,
+      "longitude": 100.5,
+      "is_demo": false,
+      "created_at": "2026-03-01T00:01:00+00:00",
+      "updated_at": "2026-03-01T00:01:00+00:00"
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333333",
+      "role": "farmer",
+      "display_name": "Lin Chen",
+      "preferred_language": "en",
+      "trust_score": 4.2,
+      "avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=LinChen",
+      "village": "Taman Seri Padi",
+      "state": "Kedah",
+      "latitude": 5.69,
+      "longitude": 100.48,
+      "is_demo": false,
+      "created_at": "2026-03-01T00:02:00+00:00",
+      "updated_at": "2026-03-01T00:02:00+00:00"
+    },
+    {
+      "id": "44444444-4444-4444-4444-444444444444",
+      "role": "farmer",
+      "display_name": "Siti Sarah",
+      "preferred_language": "bm",
+      "trust_score": 4.1,
+      "avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=SitiSarah",
+      "village": "Kampung Alor",
+      "state": "Kedah",
+      "latitude": 5.648,
+      "longitude": 100.52,
+      "is_demo": false,
+      "created_at": "2026-03-01T00:03:00+00:00",
+      "updated_at": "2026-03-01T00:03:00+00:00"
+    },
+    {
+      "id": "55555555-5555-5555-5555-555555555555",
+      "role": "buyer",
+      "display_name": "Mak Teh Grocer",
+      "preferred_language": "bm",
+      "trust_score": 4.7,
+      "avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=MakTeh",
+      "village": "Ipoh",
+      "state": "Perak",
+      "latitude": 4.5975,
+      "longitude": 101.0901,
+      "is_demo": false,
+      "created_at": "2026-03-01T00:04:00+00:00",
+      "updated_at": "2026-03-01T00:04:00+00:00"
+    },
+    {
+      "id": "66666666-6666-6666-6666-666666666666",
+      "role": "buyer",
+      "display_name": "Warung Nusantara",
+      "preferred_language": "en",
+      "trust_score": 4.6,
+      "avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=WarungNusantara",
+      "village": "George Town",
+      "state": "Penang",
+      "latitude": 5.4141,
+      "longitude": 100.3288,
+      "is_demo": false,
+      "created_at": "2026-03-01T00:05:00+00:00",
+      "updated_at": "2026-03-01T00:05:00+00:00"
+    }
+  ],
+  "farms": [
+    {
+      "id": "71111111-1111-1111-1111-111111111111",
+      "profile_id": "11111111-1111-1111-1111-111111111111",
+      "farm_name": "Karim Family Plot",
+      "farm_type": "paddy",
+      "area_hectares": 2.5,
+      "latitude": 5.6613,
+      "longitude": 100.502,
+      "created_at": "2026-03-01T00:10:00+00:00",
+      "updated_at": "2026-03-01T00:10:00+00:00"
+    },
+    {
+      "id": "72222222-2222-2222-2222-222222222222",
+      "profile_id": "22222222-2222-2222-2222-222222222222",
+      "farm_name": "Pak Abu Organics",
+      "farm_type": "mixed",
+      "area_hectares": 1.8,
+      "latitude": 5.674,
+      "longitude": 100.5,
+      "created_at": "2026-03-01T00:11:00+00:00",
+      "updated_at": "2026-03-01T00:11:00+00:00"
+    },
+    {
+      "id": "73333333-3333-3333-3333-333333333333",
+      "profile_id": "33333333-3333-3333-3333-333333333333",
+      "farm_name": "Lin Nursery Block",
+      "farm_type": "nursery",
+      "area_hectares": 1.2,
+      "latitude": 5.69,
+      "longitude": 100.48,
+      "created_at": "2026-03-01T00:12:00+00:00",
+      "updated_at": "2026-03-01T00:12:00+00:00"
+    },
+    {
+      "id": "74444444-4444-4444-4444-444444444444",
+      "profile_id": "44444444-4444-4444-4444-444444444444",
+      "farm_name": "Siti Packing Yard",
+      "farm_type": "horticulture",
+      "area_hectares": 1.0,
+      "latitude": 5.648,
+      "longitude": 100.52,
+      "created_at": "2026-03-01T00:13:00+00:00",
+      "updated_at": "2026-03-01T00:13:00+00:00"
+    }
+  ],
+  "crop_profiles": [
+    {
+      "id": "81111111-1111-1111-1111-111111111111",
+      "crop_code": "paddy",
+      "label": "Paddy (MR269)",
+      "growth_days": 110,
+      "yield_min_kg_per_hectare": 5200,
+      "yield_max_kg_per_hectare": 6500,
+      "default_quality_band": "Grade A",
+      "created_at": "2026-03-01T00:20:00+00:00",
+      "updated_at": "2026-03-01T00:20:00+00:00"
+    },
+    {
+      "id": "82222222-2222-2222-2222-222222222222",
+      "crop_code": "sweet_corn",
+      "label": "Sweet Corn",
+      "growth_days": 85,
+      "yield_min_kg_per_hectare": 7200,
+      "yield_max_kg_per_hectare": 9100,
+      "default_quality_band": "Grade A",
+      "created_at": "2026-03-01T00:21:00+00:00",
+      "updated_at": "2026-03-01T00:21:00+00:00"
+    }
+  ],
+  "inventory_items": [
+    {
+      "id": "10000000-0000-0000-0000-000000000001",
+      "owner_profile_id": "11111111-1111-1111-1111-111111111111",
+      "item_name": "Nitrogen Fertilizer",
+      "normalized_item_name": "nitrogen_fertilizer",
+      "category": "fertilizer",
+      "quantity": 5,
+      "unit": "bag",
+      "desired_item_name": "organic_pesticide",
+      "desired_priority": "Ready to barter",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:30:00+00:00",
+      "updated_at": "2026-03-01T00:30:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000002",
+      "owner_profile_id": "11111111-1111-1111-1111-111111111111",
+      "item_name": "Compost Tea",
+      "normalized_item_name": "compost_tea",
+      "category": "soil_treatment",
+      "quantity": 20,
+      "unit": "liter",
+      "desired_item_name": "seedling_trays",
+      "desired_priority": "Open to trade",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:31:00+00:00",
+      "updated_at": "2026-03-01T00:31:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000003",
+      "owner_profile_id": "22222222-2222-2222-2222-222222222222",
+      "item_name": "Organic Pesticide",
+      "normalized_item_name": "organic_pesticide",
+      "category": "pesticide",
+      "quantity": 15,
+      "unit": "liter",
+      "desired_item_name": "nitrogen_fertilizer",
+      "desired_priority": "Immediate priority",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:32:00+00:00",
+      "updated_at": "2026-03-01T00:32:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000004",
+      "owner_profile_id": "22222222-2222-2222-2222-222222222222",
+      "item_name": "Bio-Fertilizer",
+      "normalized_item_name": "bio_fertilizer",
+      "category": "fertilizer",
+      "quantity": 8,
+      "unit": "bag",
+      "desired_item_name": "seedling_trays",
+      "desired_priority": "Open to trade",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:33:00+00:00",
+      "updated_at": "2026-03-01T00:33:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000005",
+      "owner_profile_id": "33333333-3333-3333-3333-333333333333",
+      "item_name": "Seedling Trays",
+      "normalized_item_name": "seedling_trays",
+      "category": "equipment",
+      "quantity": 40,
+      "unit": "set",
+      "desired_item_name": "compost_tea",
+      "desired_priority": "Immediate priority",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:34:00+00:00",
+      "updated_at": "2026-03-01T00:34:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000006",
+      "owner_profile_id": "33333333-3333-3333-3333-333333333333",
+      "item_name": "Sweet Corn Seed Pack",
+      "normalized_item_name": "seed_pack",
+      "category": "seed",
+      "quantity": 25,
+      "unit": "pack",
+      "desired_item_name": "nitrogen_fertilizer",
+      "desired_priority": "Open to trade",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:35:00+00:00",
+      "updated_at": "2026-03-01T00:35:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000007",
+      "owner_profile_id": "44444444-4444-4444-4444-444444444444",
+      "item_name": "Fruit Crates",
+      "normalized_item_name": "fruit_crates",
+      "category": "packaging",
+      "quantity": 30,
+      "unit": "crate",
+      "desired_item_name": "organic_pesticide",
+      "desired_priority": "Open to trade",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:36:00+00:00",
+      "updated_at": "2026-03-01T00:36:00+00:00"
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000008",
+      "owner_profile_id": "44444444-4444-4444-4444-444444444444",
+      "item_name": "Shovel Set",
+      "normalized_item_name": "shovel_set",
+      "category": "equipment",
+      "quantity": 3,
+      "unit": "set",
+      "desired_item_name": "nitrogen_fertilizer",
+      "desired_priority": "Open to trade",
+      "availability_status": "available",
+      "created_at": "2026-03-01T00:37:00+00:00",
+      "updated_at": "2026-03-01T00:37:00+00:00"
+    }
+  ],
+  "market_price_references": [
+    {
+      "id": "12000000-0000-0000-0000-000000000001",
+      "normalized_item_name": "nitrogen_fertilizer",
+      "display_name": "Nitrogen Fertilizer",
+      "unit": "bag",
+      "price_per_unit": 30.0,
+      "created_at": "2026-03-01T00:40:00+00:00",
+      "updated_at": "2026-03-01T00:40:00+00:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000002",
+      "normalized_item_name": "organic_pesticide",
+      "display_name": "Organic Pesticide",
+      "unit": "liter",
+      "price_per_unit": 50.0,
+      "created_at": "2026-03-01T00:41:00+00:00",
+      "updated_at": "2026-03-01T00:41:00+00:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000003",
+      "normalized_item_name": "bio_fertilizer",
+      "display_name": "Bio-Fertilizer",
+      "unit": "bag",
+      "price_per_unit": 28.0,
+      "created_at": "2026-03-01T00:42:00+00:00",
+      "updated_at": "2026-03-01T00:42:00+00:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000004",
+      "normalized_item_name": "seedling_trays",
+      "display_name": "Seedling Trays",
+      "unit": "set",
+      "price_per_unit": 6.0,
+      "created_at": "2026-03-01T00:43:00+00:00",
+      "updated_at": "2026-03-01T00:43:00+00:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000005",
+      "normalized_item_name": "compost_tea",
+      "display_name": "Compost Tea",
+      "unit": "liter",
+      "price_per_unit": 18.0,
+      "created_at": "2026-03-01T00:44:00+00:00",
+      "updated_at": "2026-03-01T00:44:00+00:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000006",
+      "normalized_item_name": "fruit_crates",
+      "display_name": "Fruit Crates",
+      "unit": "crate",
+      "price_per_unit": 15.0,
+      "created_at": "2026-03-01T00:45:00+00:00",
+      "updated_at": "2026-03-01T00:45:00+00:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000007",
+      "normalized_item_name": "shovel_set",
+      "display_name": "Shovel Set",
+      "unit": "set",
+      "price_per_unit": 60.0,
+      "created_at": "2026-03-01T00:46:00+00:00",
+      "updated_at": "2026-03-01T00:46:00+00:00"
+    }
+  ],
+  "meeting_points": [
+    {
+      "id": "20000000-0000-0000-0000-000000000001",
+      "name": "Kampung Baru Center",
+      "address": "Kampung Baru Community Hall, Kedah",
+      "latitude": 5.6688,
+      "longitude": 100.5025,
+      "created_at": "2026-03-01T00:50:00+00:00",
+      "updated_at": "2026-03-01T00:50:00+00:00"
+    },
+    {
+      "id": "20000000-0000-0000-0000-000000000002",
+      "name": "Village Market Hub",
+      "address": "Pasar Mini Titi Akar, Kedah",
+      "latitude": 5.6601,
+      "longitude": 100.5102,
+      "created_at": "2026-03-01T00:51:00+00:00",
+      "updated_at": "2026-03-01T00:51:00+00:00"
+    },
+    {
+      "id": "20000000-0000-0000-0000-000000000003",
+      "name": "Rice Mill Junction",
+      "address": "Jalan Kilang Padi, Kedah",
+      "latitude": 5.6765,
+      "longitude": 100.492,
+      "created_at": "2026-03-01T00:52:00+00:00",
+      "updated_at": "2026-03-01T00:52:00+00:00"
+    }
+  ],
+  "barter_requests": [
+    {
+      "id": "30000000-0000-0000-0000-000000000001",
+      "farmer_profile_id": "22222222-2222-2222-2222-222222222222",
+      "raw_text": "I have bio fertilizer and need fruit crates for next week",
+      "crop_code": "paddy",
+      "crop_label": "Paddy (MR269)",
+      "timeline_label": "Next Week",
+      "timeline_days": 7,
+      "radius_km": 5,
+      "urgency": "medium",
+      "parsed_confidence": 0.94,
+      "market_opportunity_count": 1,
+      "status": "planted",
+      "created_at": "2026-03-05T00:00:00+00:00",
+      "updated_at": "2026-03-05T00:00:00+00:00"
+    }
+  ],
+  "barter_request_items": [
+    {
+      "id": "30000000-0000-0000-0000-000000000011",
+      "request_id": "30000000-0000-0000-0000-000000000001",
+      "item_role": "have",
+      "normalized_name": "bio_fertilizer",
+      "display_name": "Bio-Fertilizer",
+      "category": "fertilizer",
+      "quantity": 4,
+      "unit": "bag",
+      "created_at": "2026-03-05T00:01:00+00:00",
+      "updated_at": "2026-03-05T00:01:00+00:00"
+    },
+    {
+      "id": "30000000-0000-0000-0000-000000000012",
+      "request_id": "30000000-0000-0000-0000-000000000001",
+      "item_role": "need",
+      "normalized_name": "fruit_crates",
+      "display_name": "Fruit Crates",
+      "category": "packaging",
+      "quantity": 12,
+      "unit": "crate",
+      "created_at": "2026-03-05T00:02:00+00:00",
+      "updated_at": "2026-03-05T00:02:00+00:00"
+    }
+  ],
+  "barter_matches": [
+    {
+      "id": "30000000-0000-0000-0000-000000000002",
+      "request_id": "30000000-0000-0000-0000-000000000001",
+      "counterparty_profile_id": "44444444-4444-4444-4444-444444444444",
+      "counterparty_inventory_item_id": "10000000-0000-0000-0000-000000000007",
+      "exact_need_score": 50,
+      "reciprocal_need_score": 0,
+      "distance_score": 12,
+      "trust_score": 8,
+      "total_score": 70,
+      "distance_km": 2.8,
+      "rank": 1,
+      "rationale": "Siti Sarah can supply Fruit Crates and is a strong fit for Pak Abu's available Bio-Fertilizer.",
+      "snapshot": {
+        "counterparty_name": "Siti Sarah",
+        "counterparty_avatar_url": "https://api.dicebear.com/9.x/lorelei/svg?seed=SitiSarah",
+        "offered_item_name": "Fruit Crates",
+        "offered_item_normalized_name": "fruit_crates",
+        "offered_quantity": 30,
+        "offered_unit": "crate",
+        "desired_item_name": "organic_pesticide",
+        "desired_priority": "Open to trade",
+        "insight": "Fruit Crates help Pak Abu package his paddy harvest and move produce faster."
+      },
+      "created_at": "2026-03-05T00:03:00+00:00",
+      "updated_at": "2026-03-05T00:03:00+00:00"
+    }
+  ],
+  "barter_proposals": [
+    {
+      "id": "30000000-0000-0000-0000-000000000003",
+      "request_id": "30000000-0000-0000-0000-000000000001",
+      "match_id": "30000000-0000-0000-0000-000000000002",
+      "counterparty_profile_id": "44444444-4444-4444-4444-444444444444",
+      "offer_item_name": "Bio-Fertilizer",
+      "offer_quantity": 4,
+      "offer_unit": "bag",
+      "requested_item_name": "Fruit Crates",
+      "requested_quantity": 8,
+      "requested_unit": "crate",
+      "ratio_text": "1 bag Bio-Fertilizer = 2 crate Fruit Crates",
+      "valuation_confidence": 0.93,
+      "explanation": "Seeded historical barter proposal.",
+      "meeting_point_id": "20000000-0000-0000-0000-000000000001",
+      "meeting_point_name": "Kampung Baru Center",
+      "meeting_label": "Tomorrow - 09:00 AM",
+      "meeting_at": "2026-01-09T09:00:00+08:00",
+      "document_number": "TT-HISTORY-AI",
+      "status": "accepted",
+      "snapshot": {
+        "counterparty_name": "Siti Sarah",
+        "offer_item_name": "Bio-Fertilizer",
+        "offer_quantity": 4,
+        "offer_unit": "bag",
+        "requested_item_name": "Fruit Crates",
+        "requested_quantity": 8,
+        "requested_unit": "crate",
+        "meeting_point_name": "Kampung Baru Center",
+        "meeting_label": "Tomorrow - 09:00 AM",
+        "document_number": "TT-HISTORY-AI",
+        "explanation": "Seeded historical barter proposal."
+      },
+      "created_at": "2026-03-05T00:04:00+00:00",
+      "updated_at": "2026-03-05T00:04:00+00:00"
+    }
+  ],
+  "trades": [
+    {
+      "id": "30000000-0000-0000-0000-000000000004",
+      "proposal_id": "30000000-0000-0000-0000-000000000003",
+      "request_id": "30000000-0000-0000-0000-000000000001",
+      "farmer_profile_id": "22222222-2222-2222-2222-222222222222",
+      "counterparty_profile_id": "44444444-4444-4444-4444-444444444444",
+      "status": "accepted",
+      "meeting_point_name": "Kampung Baru Center",
+      "meeting_at": "2026-01-09T09:00:00+08:00",
+      "transaction_code": "TRD-HISTORY",
+      "snapshot": {
+        "counterparty_name": "Siti Sarah",
+        "offer_item_name": "Bio-Fertilizer",
+        "offer_quantity": 4,
+        "offer_unit": "bag",
+        "requested_item_name": "Fruit Crates",
+        "requested_quantity": 8,
+        "requested_unit": "crate",
+        "projected_yield_uplift_pct": 15,
+        "planting_prompt": "Historical seeded trade."
+      },
+      "created_at": "2026-03-05T00:05:00+00:00",
+      "updated_at": "2026-03-05T00:05:00+00:00"
+    }
+  ],
+  "planting_records": [
+    {
+      "id": "30000000-0000-0000-0000-000000000005",
+      "trade_id": "30000000-0000-0000-0000-000000000004",
+      "farmer_profile_id": "22222222-2222-2222-2222-222222222222",
+      "crop_code": "paddy",
+      "crop_label": "Paddy (MR269)",
+      "planting_date": "2026-01-10",
+      "area_value": 2.0,
+      "area_unit": "hectares",
+      "area_hectares": 2.0,
+      "input_summary": "Organic soil treatment and measured irrigation schedule.",
+      "snapshot": {
+        "soil_vitality_label": "Optimal Nitrate",
+        "yield_probability_label": "Grade A Premium"
+      },
+      "created_at": "2026-03-05T00:06:00+00:00",
+      "updated_at": "2026-03-05T00:06:00+00:00"
+    }
+  ],
+  "harvest_listings": [
+    {
+      "id": "30000000-0000-0000-0000-000000000006",
+      "planting_record_id": "30000000-0000-0000-0000-000000000005",
+      "farmer_profile_id": "22222222-2222-2222-2222-222222222222",
+      "crop_code": "paddy",
+      "crop_label": "Paddy (MR269)",
+      "listing_title": "Future Paddy (MR269) Supply",
+      "estimated_yield_min_kg": 10500,
+      "estimated_yield_max_kg": 12800,
+      "harvest_window_start": "2026-04-23",
+      "harvest_window_end": "2026-05-07",
+      "quality_band": "Grade A Premium",
+      "confidence_score": 94.8,
+      "reservation_discount_pct": 10,
+      "early_incentive_label": "10% off for reservations",
+      "listing_note": "Seeded future supply listing for marketplace-style previews.",
+      "status": "draft",
+      "snapshot": {
+        "soil_vitality_label": "Optimal Nitrate",
+        "yield_probability_label": "Grade A Premium"
+      },
+      "created_at": "2026-03-05T00:07:00+00:00",
+      "updated_at": "2026-03-05T00:07:00+00:00"
+    }
+  ],
+  "listing_buyer_interests": [
+    {
+      "id": "30000000-0000-0000-0000-000000000007",
+      "harvest_listing_id": "30000000-0000-0000-0000-000000000006",
+      "buyer_profile_id": "55555555-5555-5555-5555-555555555555",
+      "interest_type": "watching",
+      "reserved_quantity_kg": null,
+      "note": "Grocer monitoring January paddy window",
+      "created_at": "2026-03-05T00:08:00+00:00",
+      "updated_at": "2026-03-05T00:08:00+00:00"
+    },
+    {
+      "id": "30000000-0000-0000-0000-000000000008",
+      "harvest_listing_id": "30000000-0000-0000-0000-000000000006",
+      "buyer_profile_id": "66666666-6666-6666-6666-666666666666",
+      "interest_type": "quote_requested",
+      "reserved_quantity_kg": null,
+      "note": "Restaurant requested a forward quote",
+      "created_at": "2026-03-05T00:09:00+00:00",
+      "updated_at": "2026-03-05T00:09:00+00:00"
+    }
+  ]
+}

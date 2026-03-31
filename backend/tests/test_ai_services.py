@@ -4,8 +4,6 @@ import json
 import unittest
 from unittest.mock import Mock
 
-from postgrest.exceptions import APIError as PostgrestAPIError
-
 from app.services.ai.client import GeminiAiClient, GeminiAiClientError, GeminiStructuredResult, GeminiTextResult
 from app.services.ai.orchestrator import (
     AiGenerationMetadata,
@@ -378,7 +376,7 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
         self.assertEqual(response.have_item.display_name, "Nitrogen Fertilizer")
         self.assertEqual(response.need_item.display_name, "Organic Pesticide")
 
-    def test_get_or_create_proposal_returns_existing_row_after_duplicate_insert(self) -> None:
+    def test_get_or_create_proposal_returns_existing_row_when_repo_is_idempotent(self) -> None:
         repo = Mock()
         repo.get_match.return_value = {
             "id": "match-123",
@@ -441,17 +439,11 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
         repo.list_meeting_points.return_value = [
             {"id": "meeting-1", "name": "Kampung Baru Center", "latitude": 5.665, "longitude": 100.501},
         ]
-        repo.create_proposal.side_effect = PostgrestAPIError(
-            {
-                "message": "duplicate key value violates unique constraint",
-                "code": "23505",
-                "hint": None,
-                "details": "Key (match_id) already exists.",
-            }
-        )
         repo.get_existing_proposal_for_match.side_effect = [
             None,
-            {
+            None,
+        ]
+        repo.create_proposal.return_value = {
                 "id": "proposal-123",
                 "request_id": "request-123",
                 "match_id": "match-123",
@@ -470,9 +462,11 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
                 "meeting_label": "Tomorrow - 09:00 AM",
                 "meeting_at": "2026-03-31T09:00:00+08:00",
                 "snapshot": {"counterparty_name": "Pak Abu"},
-            },
-        ]
+            }
         repo.get_trade_by_proposal.return_value = None
+        repo.update_barter_request.return_value = {
+            "id": "request-123",
+        }
 
         ai_orchestrator = Mock()
         ai_orchestrator.generate_proposal_copy.return_value = Mock(
@@ -490,6 +484,61 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
 
         self.assertEqual(response.proposal_id, "proposal-123")
         self.assertEqual(response.explanation, "Existing proposal")
+
+    def test_get_or_create_proposal_returns_existing_row_before_create(self) -> None:
+        repo = Mock()
+        repo.get_match.return_value = {
+            "id": "match-123",
+            "request_id": "request-123",
+            "counterparty_profile_id": "counterparty-123",
+            "distance_km": 2.4,
+            "snapshot": {
+                "offered_item_name": "Organic Pesticide",
+                "offered_item_normalized_name": "organic_pesticide",
+                "offered_quantity": 15,
+                "offered_unit": "liter",
+            },
+        }
+        repo.get_barter_request.return_value = {
+            "id": "request-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "crop_label": "Paddy (MR269)",
+            "timeline_label": "Next Week",
+            "urgency": "medium",
+        }
+        repo.get_existing_proposal_for_match.return_value = {
+            "id": "proposal-123",
+            "request_id": "request-123",
+            "match_id": "match-123",
+            "document_number": "TT-MATCH123-AI",
+            "created_at": "2026-03-30T08:00:00+00:00",
+            "offer_item_name": "Nitrogen Fertilizer",
+            "offer_quantity": 5,
+            "offer_unit": "bag",
+            "requested_item_name": "Organic Pesticide",
+            "requested_quantity": 3,
+            "requested_unit": "liter",
+            "ratio_text": "1 bag Nitrogen Fertilizer = 0.6 liter Organic Pesticide",
+            "valuation_confidence": 0.94,
+            "explanation": "Existing proposal",
+            "meeting_point_name": "Kampung Baru Center",
+            "meeting_label": "Tomorrow - 09:00 AM",
+            "meeting_at": "2026-03-31T09:00:00+08:00",
+            "snapshot": {"counterparty_name": "Pak Abu"},
+        }
+        repo.get_trade_by_proposal.return_value = None
+
+        service = FarmerWorkflowService(
+            repo=repo,
+            demo_farmer_profile_id="11111111-1111-1111-1111-111111111111",
+            ai_orchestrator=None,
+        )
+
+        response = service.get_or_create_proposal("match-123")
+
+        self.assertEqual(response.proposal_id, "proposal-123")
+        self.assertEqual(response.explanation, "Existing proposal")
+        repo.create_proposal.assert_not_called()
 
 
 if __name__ == "__main__":

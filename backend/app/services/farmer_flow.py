@@ -5,7 +5,6 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
-from postgrest.exceptions import APIError as PostgrestAPIError
 
 from app.repositories.farmer_workflow import FarmerWorkflowRepository
 from app.schemas.farmer_flow import (
@@ -336,14 +335,7 @@ class FarmerWorkflowService:
             "status": "pending",
             "snapshot": proposal_snapshot,
         }
-        try:
-            proposal_row = self.repo.create_proposal(proposal_payload)
-        except PostgrestAPIError as exc:
-            if exc.code == "23505":
-                existing_proposal = self.repo.get_existing_proposal_for_match(match_id)
-                if existing_proposal is not None:
-                    return self._build_proposal_response(existing_proposal)
-            raise
+        proposal_row = self.repo.create_proposal(proposal_payload)
         self.repo.update_barter_request(request_row["id"], {"status": "proposed"})
         return self._build_proposal_response(proposal_row)
 
@@ -543,7 +535,7 @@ class FarmerWorkflowService:
         if demo_profile is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Demo farmer profile not found. Apply the Supabase seed data first.",
+                detail="Demo farmer profile not found. Apply the Firebase seed data first.",
             )
         return demo_profile
 
