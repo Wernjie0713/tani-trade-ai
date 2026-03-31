@@ -2,9 +2,10 @@ import { useEffect, useState } from "react"
 import { Navigate, useNavigate } from "react-router-dom"
 
 import FarmerShell from "@/components/FarmerShell"
+import IntakeSummaryEditSheet from "@/components/IntakeSummaryEditSheet"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
-import { getFarmerIntake, getOrCreateFarmerMatches } from "@/lib/farmerApi"
+import { getFarmerIntake, getOrCreateFarmerMatches, updateFarmerIntake } from "@/lib/farmerApi"
 import { formatConfidence, formatNumber, formatQuantity } from "@/lib/farmerFlow"
 import { ROUTES } from "@/prototype/routes"
 
@@ -81,11 +82,16 @@ function ParsedAiSummaryPage() {
     status: "idle",
     error: null,
   })
+  const [editorState, setEditorState] = useState({
+    open: false,
+    status: "idle",
+    error: null,
+  })
 
   useEffect(() => {
     let isActive = true
 
-    async function loadSummary() {
+    async function loadSummaryEffect() {
       setScreenState({
         status: "loading",
         data: null,
@@ -116,7 +122,7 @@ function ParsedAiSummaryPage() {
       }
     }
 
-    loadSummary()
+    loadSummaryEffect()
 
     return () => {
       isActive = false
@@ -125,6 +131,22 @@ function ParsedAiSummaryPage() {
 
   if (!flowIds.requestId) {
     return <Navigate replace to={ROUTES.FARMER_VOICE_INPUT} />
+  }
+
+  function openEditor() {
+    setEditorState({
+      open: true,
+      status: "idle",
+      error: null,
+    })
+  }
+
+  function closeEditor() {
+    setEditorState((current) => ({
+      ...current,
+      open: false,
+      error: null,
+    }))
   }
 
   async function handleFindMatches() {
@@ -151,7 +173,45 @@ function ParsedAiSummaryPage() {
     }
   }
 
+  async function handleSaveEdits(payload) {
+    setEditorState({
+      open: true,
+      status: "loading",
+      error: null,
+    })
+
+    try {
+      const updatedSummary = await updateFarmerIntake(flowIds.requestId, payload)
+      setScreenState({
+        status: "success",
+        data: updatedSummary,
+        error: null,
+      })
+      updateFlowIds({
+        matchId: null,
+        proposalId: null,
+        tradeId: null,
+        plantingRecordId: null,
+        harvestListingId: null,
+      })
+      setEditorState({
+        open: false,
+        status: "idle",
+        error: null,
+      })
+    } catch (error) {
+      setEditorState({
+        open: true,
+        status: "error",
+        error: error.message || "Unable to save your intake changes.",
+      })
+    }
+  }
+
   const summary = screenState.data
+  const cropDisplayValue = summary?.crop_detected
+    ? summary.crop_display_label || summary.crop_label
+    : "Not specified"
 
   return (
     <PrototypePageFrame
@@ -201,11 +261,11 @@ function ParsedAiSummaryPage() {
                       <span className="material-symbols-outlined text-[28px]">potted_plant</span>
                     </div>
                     <div>
-                      <span className="font-label text-[10px] uppercase font-bold text-outline tracking-wider block">Crop Type</span>
-                      <span className="font-headline text-[17px] font-bold text-on-surface">{summary.crop_label}</span>
+                      <span className="font-label text-[10px] uppercase font-bold text-outline tracking-wider block">Crop Context</span>
+                      <span className="font-headline text-[17px] font-bold text-on-surface">{cropDisplayValue}</span>
                     </div>
                   </div>
-                  <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 text-outline" onClick={() => navigate(ROUTES.FARMER_VOICE_INPUT)} type="button">
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 text-outline" onClick={openEditor} type="button">
                     <span className="material-symbols-outlined text-[20px]">edit</span>
                   </button>
                 </div>
@@ -216,7 +276,7 @@ function ParsedAiSummaryPage() {
                       <div className="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
                         <span className="material-symbols-outlined">inventory_2</span>
                       </div>
-                      <button className="text-outline/40 hover:text-primary transition-colors" onClick={() => navigate(ROUTES.FARMER_VOICE_INPUT)} type="button">
+                      <button className="text-outline/40 hover:text-primary transition-colors" onClick={openEditor} type="button">
                         <span className="material-symbols-outlined text-[18px]">edit</span>
                       </button>
                     </div>
@@ -233,7 +293,7 @@ function ParsedAiSummaryPage() {
                       <div className="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
                         <span className="material-symbols-outlined">shopping_bag</span>
                       </div>
-                      <button className="text-outline/40 hover:text-primary transition-colors" onClick={() => navigate(ROUTES.FARMER_VOICE_INPUT)} type="button">
+                      <button className="text-outline/40 hover:text-primary transition-colors" onClick={openEditor} type="button">
                         <span className="material-symbols-outlined text-[18px]">edit</span>
                       </button>
                     </div>
@@ -295,13 +355,22 @@ function ParsedAiSummaryPage() {
                   <span>{submitState.status === "loading" ? "Finding Matches..." : "Find Best Matches"}</span>
                   <span className="material-symbols-outlined font-bold">arrow_forward</span>
                 </button>
-                <button className="w-full bg-transparent text-outline font-headline font-bold text-[14px] py-2 rounded-full hover:text-primary transition-colors uppercase tracking-widest" onClick={() => navigate(ROUTES.FARMER_VOICE_INPUT)} type="button">
+                <button className="w-full bg-transparent text-outline font-headline font-bold text-[14px] py-2 rounded-full hover:text-primary transition-colors uppercase tracking-widest" onClick={openEditor} type="button">
                   Modify Details
                 </button>
               </div>
             </>
           )}
         </main>
+        {editorState.open && summary ? (
+          <IntakeSummaryEditSheet
+            onClose={closeEditor}
+            onSave={handleSaveEdits}
+            open
+            saveState={editorState}
+            summary={summary}
+          />
+        ) : null}
       </FarmerShell>
     </PrototypePageFrame>
   )

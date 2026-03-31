@@ -35,8 +35,24 @@ class BarterItemDto(BaseModel):
     unit: str
 
 
+class EditableBarterItemInput(BaseModel):
+    normalized_name: str = Field(min_length=2)
+    display_name: str = Field(min_length=2)
+    quantity: float = Field(gt=0)
+    unit: str = Field(min_length=1)
+
+
 class IntakeCreateRequest(BaseModel):
     raw_text: str = Field(min_length=3)
+
+
+class IntakeUpdateRequest(BaseModel):
+    crop_display_label: str | None = None
+    timeline_label: str = Field(min_length=2)
+    timeline_days: int = Field(ge=0)
+    radius_km: float = Field(gt=0)
+    have_item: EditableBarterItemInput
+    need_item: EditableBarterItemInput
 
 
 class IntakeSummaryResponse(BaseModel):
@@ -45,6 +61,8 @@ class IntakeSummaryResponse(BaseModel):
     raw_text: str
     crop_code: str
     crop_label: str
+    crop_detected: bool = True
+    crop_display_label: str | None = None
     timeline_label: str
     timeline_days: int
     radius_km: float
@@ -159,3 +177,4 @@ class HarvestListingResponse(BaseModel):
     buyer_interest_count: int
     buyer_previews: list[BuyerPreview]
     status: str
+    published_at: datetime | None = None

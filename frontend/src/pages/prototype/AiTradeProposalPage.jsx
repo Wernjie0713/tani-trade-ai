@@ -313,8 +313,15 @@ function AiTradeProposalPage() {
                   <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   {acceptState.status === "loading" ? "Accepting Proposal..." : "Accept Trade Proposal"}
                 </button>
-                <button className="w-full bg-surface-container-high/60 text-on-surface-variant py-4 rounded-full font-label font-bold uppercase tracking-widest text-xs active:scale-[0.98] transition-all border border-outline-variant/40" onClick={() => navigate(ROUTES.FARMER_NEARBY_MATCHES)} type="button">
-                  Request Optimization
+                <button
+                  className="w-full rounded-full border border-outline-variant/40 bg-surface-container-high/60 px-5 py-4 text-on-surface-variant transition-all active:scale-[0.98]"
+                  onClick={() => navigate(ROUTES.FARMER_NEARBY_MATCHES)}
+                  type="button"
+                >
+                  <span className="flex items-center justify-center gap-2 font-label text-xs font-bold uppercase tracking-[0.16em]">
+                    <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
+                    Review Other Matches
+                  </span>
                 </button>
               </section>
             </>

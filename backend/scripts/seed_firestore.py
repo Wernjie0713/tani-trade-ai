@@ -10,6 +10,7 @@ REPO_ROOT = BACKEND_DIR.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.db.firebase import get_firestore_client  # noqa: E402
+from seed_expansion import expand_seed_data  # noqa: E402
 
 
 def main() -> int:
@@ -22,7 +23,7 @@ def main() -> int:
         return 1
 
     seed_path = REPO_ROOT / "firebase" / "seed_data.json"
-    seed_data = json.loads(seed_path.read_text(encoding="utf-8"))
+    seed_data = expand_seed_data(json.loads(seed_path.read_text(encoding="utf-8")))
 
     total = 0
     for collection_name, documents in seed_data.items():

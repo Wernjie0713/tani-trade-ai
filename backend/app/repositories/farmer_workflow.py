@@ -28,6 +28,18 @@ class FarmerWorkflowRepository:
             key=lambda row: row.get("created_at", ""),
         )
 
+    def list_available_inventory(self, exclude_owner_profile_id: str | None = None) -> list[dict[str, Any]]:
+        rows = self._list_rows("inventory_items")
+        return sorted(
+            [
+                row
+                for row in rows
+                if row.get("availability_status") == "available"
+                and row.get("owner_profile_id") != exclude_owner_profile_id
+            ],
+            key=lambda row: row.get("created_at", ""),
+        )
+
     def get_profiles_by_ids(self, profile_ids: list[str]) -> dict[str, dict[str, Any]]:
         if not profile_ids:
             return {}
@@ -66,6 +78,10 @@ class FarmerWorkflowRepository:
         return self._insert_one("barter_requests", payload)
 
     def create_barter_request_items(self, payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return self._insert_many("barter_request_items", payloads)
+
+    def replace_barter_request_items(self, request_id: str, payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        self._delete_many("barter_request_items", {"request_id": request_id})
         return self._insert_many("barter_request_items", payloads)
 
     def get_barter_request(self, request_id: str) -> dict[str, Any] | None:
@@ -127,6 +143,9 @@ class FarmerWorkflowRepository:
     def list_meeting_points(self) -> list[dict[str, Any]]:
         return self._list_rows("meeting_points")
 
+    def list_crop_profiles(self) -> list[dict[str, Any]]:
+        return sorted(self._list_rows("crop_profiles"), key=lambda row: row.get("created_at", ""))
+
     def get_market_price_reference(self, normalized_item_name: str) -> dict[str, Any] | None:
         return self._select_first(
             "market_price_references",
@@ -162,6 +181,14 @@ class FarmerWorkflowRepository:
     def get_proposal(self, proposal_id: str) -> dict[str, Any] | None:
         return self._select_first("barter_proposals", {"id": proposal_id})
 
+    def list_proposals(self, request_id: str) -> list[dict[str, Any]]:
+        rows = [
+            row
+            for row in self._list_rows("barter_proposals")
+            if row.get("request_id") == request_id
+        ]
+        return sorted(rows, key=lambda row: row.get("created_at", ""))
+
     def update_proposal(self, proposal_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._update_one("barter_proposals", proposal_id, payload)
 
@@ -174,11 +201,30 @@ class FarmerWorkflowRepository:
     def get_trade(self, trade_id: str) -> dict[str, Any] | None:
         return self._select_first("trades", {"id": trade_id})
 
+    def list_trades(self, request_id: str) -> list[dict[str, Any]]:
+        rows = [
+            row
+            for row in self._list_rows("trades")
+            if row.get("request_id") == request_id
+        ]
+        return sorted(rows, key=lambda row: row.get("created_at", ""))
+
     def get_planting_record_by_trade(self, trade_id: str) -> dict[str, Any] | None:
         return self._select_first("planting_records", {"trade_id": trade_id})
 
     def get_planting_record(self, planting_record_id: str) -> dict[str, Any] | None:
         return self._select_first("planting_records", {"id": planting_record_id})
+
+    def list_planting_records_by_trade_ids(self, trade_ids: list[str]) -> list[dict[str, Any]]:
+        if not trade_ids:
+            return []
+        trade_id_set = set(trade_ids)
+        rows = [
+            row
+            for row in self._list_rows("planting_records")
+            if row.get("trade_id") in trade_id_set
+        ]
+        return sorted(rows, key=lambda row: row.get("created_at", ""))
 
     def create_planting_record(self, payload: dict[str, Any]) -> dict[str, Any]:
         return self._insert_one("planting_records", payload)
@@ -197,6 +243,17 @@ class FarmerWorkflowRepository:
 
     def get_harvest_listing(self, harvest_listing_id: str) -> dict[str, Any] | None:
         return self._select_first("harvest_listings", {"id": harvest_listing_id})
+
+    def list_harvest_listings_by_planting_ids(self, planting_record_ids: list[str]) -> list[dict[str, Any]]:
+        if not planting_record_ids:
+            return []
+        planting_id_set = set(planting_record_ids)
+        rows = [
+            row
+            for row in self._list_rows("harvest_listings")
+            if row.get("planting_record_id") in planting_id_set
+        ]
+        return sorted(rows, key=lambda row: row.get("created_at", ""))
 
     def replace_listing_interests(
         self,
@@ -224,6 +281,30 @@ class FarmerWorkflowRepository:
             if row.get("role") == "buyer"
         ]
         return sorted(rows, key=lambda row: float(row.get("trust_score", 0)), reverse=True)
+
+    def delete_matches(self, request_id: str) -> None:
+        self._delete_many("barter_matches", {"request_id": request_id})
+
+    def delete_proposals(self, request_id: str) -> None:
+        self._delete_many("barter_proposals", {"request_id": request_id})
+
+    def delete_trades_by_ids(self, trade_ids: list[str]) -> None:
+        self._delete_by_ids("trades", trade_ids)
+
+    def delete_planting_records_by_ids(self, planting_record_ids: list[str]) -> None:
+        self._delete_by_ids("planting_records", planting_record_ids)
+
+    def delete_harvest_listings_by_ids(self, harvest_listing_ids: list[str]) -> None:
+        self._delete_by_ids("harvest_listings", harvest_listing_ids)
+
+    def delete_listing_interests_by_listing_ids(self, harvest_listing_ids: list[str]) -> None:
+        if not harvest_listing_ids:
+            return
+        listing_id_set = set(harvest_listing_ids)
+        collection = self.client.collection("listing_buyer_interests")
+        for row in self._list_rows("listing_buyer_interests"):
+            if row.get("harvest_listing_id") in listing_id_set:
+                collection.document(row["id"]).delete()
 
     def _list_rows(self, collection_name: str) -> list[dict[str, Any]]:
         return [
@@ -271,6 +352,20 @@ class FarmerWorkflowRepository:
         }
         self.client.collection(collection_name).document(record_id).set(updated)
         return updated
+
+    def _delete_many(self, collection_name: str, filters: dict[str, Any]) -> None:
+        collection = self.client.collection(collection_name)
+        for row in self._filter_rows(self._list_rows(collection_name), filters):
+            collection.document(row["id"]).delete()
+
+    def _delete_by_ids(self, collection_name: str, record_ids: list[str]) -> None:
+        if not record_ids:
+            return
+        record_id_set = set(record_ids)
+        collection = self.client.collection(collection_name)
+        for row in self._list_rows(collection_name):
+            if row["id"] in record_id_set:
+                collection.document(row["id"]).delete()
 
     def _filter_rows(self, rows: list[dict[str, Any]], filters: dict[str, Any]) -> list[dict[str, Any]]:
         filtered = rows

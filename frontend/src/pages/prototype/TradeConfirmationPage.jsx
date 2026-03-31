@@ -138,7 +138,7 @@ function TradeConfirmationPage() {
         backTo={ROUTES.FARMER_AI_TRADE_PROPOSAL}
         headerTitle="Trade Confirmed"
       >
-        <main className="min-h-screen max-w-md mx-auto flex flex-col px-6 pt-10 pb-8">
+        <main className="max-w-md mx-auto flex min-h-[calc(100dvh-5.5rem)] flex-col px-6 pt-10 pb-36">
           <div className="flex flex-col items-center text-center space-y-6 mb-8">
             <div className="relative w-full aspect-[4/3] max-w-[320px]">
               <div className="absolute inset-0 bg-primary/10 blur-[60px] opacity-40 rounded-full animate-pulse-soft"></div>
@@ -274,7 +274,7 @@ function TradeConfirmationPage() {
             </>
           )}
 
-          <div className="mt-auto pt-6 space-y-4">
+          <div className="mt-auto space-y-4 pt-8">
             <button className="w-full bg-primary text-on-primary font-headline font-extrabold py-5 rounded-full shadow-2xl shadow-primary/30 active:scale-[0.97] transition-all flex items-center justify-center gap-3" onClick={() => navigate(ROUTES.FARMER_RECORD_PLANTING)} type="button">
               <span>Begin Planting Log</span>
               <span className="material-symbols-outlined text-[20px]">arrow_forward</span>

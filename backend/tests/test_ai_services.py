@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import Mock
 
 from app.services.ai.client import GeminiAiClient, GeminiAiClientError, GeminiStructuredResult, GeminiTextResult
@@ -17,6 +18,7 @@ from app.services.ai.schemas import (
 )
 from app.services.farmer_flow import FarmerWorkflowService
 from app.services.parser import ParsedBarterItem, ParsedIntake, parse_intake
+from app.schemas.farmer_flow import EditableBarterItemInput, IntakeUpdateRequest
 
 
 class FakeGeminiClient:
@@ -293,6 +295,8 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
             raw_text="I have fertilizer and need pesticide.",
             crop_code="paddy",
             crop_label="Paddy (MR269)",
+            crop_detected=False,
+            crop_display_label=None,
             timeline_label="Tomorrow",
             timeline_days=1,
             radius_km=6.0,
@@ -644,6 +648,233 @@ class FarmerWorkflowServiceAiWiringTests(unittest.TestCase):
         self.assertEqual(create_listing_payload["crop_label"], "Premium Paddy MR888")
         self.assertEqual(create_listing_payload["listing_title"], "Future Premium Paddy MR888 Supply")
         self.assertEqual(response.crop_label, "Premium Paddy MR888")
+
+    def test_get_bootstrap_builds_crop_aware_prompts_from_repo_data(self) -> None:
+        repo = Mock()
+        repo.get_profile.return_value = {
+            "id": "11111111-1111-1111-1111-111111111111",
+            "display_name": "Pak Karim",
+            "village": "Kampung Titi Akar",
+            "state": "Kedah",
+            "preferred_language": "bm",
+            "trust_score": 4.4,
+            "latitude": 5.6613,
+            "longitude": 100.5020,
+        }
+        repo.get_latest_active_flow.return_value = {}
+        repo.list_crop_profiles.return_value = [
+            {"crop_code": "paddy", "label": "Paddy (MR269)"},
+            {"crop_code": "sweet_corn", "label": "Sweet Corn"},
+        ]
+        repo.list_inventory_by_owner.return_value = [
+            {
+                "normalized_item_name": "nitrogen_fertilizer",
+                "item_name": "Nitrogen Fertilizer",
+                "quantity": 5,
+                "unit": "bag",
+                "desired_item_name": "organic_pesticide",
+            },
+            {
+                "normalized_item_name": "compost_tea",
+                "item_name": "Compost Tea",
+                "quantity": 20,
+                "unit": "liter",
+                "desired_item_name": "seedling_trays",
+            },
+        ]
+        repo.list_available_inventory.return_value = [
+            {
+                "id": "candidate-1",
+                "owner_profile_id": "farmer-2",
+                "desired_item_name": "nitrogen_fertilizer",
+                "item_name": "Organic Pesticide",
+            },
+            {
+                "id": "candidate-2",
+                "owner_profile_id": "farmer-3",
+                "desired_item_name": "compost_tea",
+                "item_name": "Seedling Trays",
+            },
+        ]
+        repo.get_profiles_by_ids.return_value = {
+            "farmer-2": {"id": "farmer-2", "latitude": 5.6620, "longitude": 100.5030},
+            "farmer-3": {"id": "farmer-3", "latitude": 5.6630, "longitude": 100.5040},
+        }
+
+        service = FarmerWorkflowService(
+            repo=repo,
+            demo_farmer_profile_id="11111111-1111-1111-1111-111111111111",
+            ai_orchestrator=None,
+        )
+
+        response = service.get_bootstrap()
+
+        self.assertEqual(len(response.quick_prompts), 3)
+        self.assertIn("planting", response.quick_prompts[0])
+        self.assertIn("Paddy (MR269)", response.quick_prompts[0])
+        self.assertIn("Nitrogen Fertilizer", response.quick_prompts[0])
+        self.assertIn("Organic Pesticide", response.quick_prompts[0])
+
+    def test_update_intake_invalidates_downstream_workflow(self) -> None:
+        repo = Mock()
+        initial_request = {
+            "id": "request-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "raw_text": "I have fertilizer and need pesticide.",
+            "crop_code": "paddy",
+            "crop_label": "Paddy (MR269)",
+            "timeline_label": "Next Week",
+            "timeline_days": 7,
+            "radius_km": 5.0,
+            "urgency": "medium",
+            "parsed_confidence": 0.91,
+            "market_opportunity_count": 2,
+            "status": "matched",
+        }
+        updated_request = {
+            **initial_request,
+            "crop_detected": False,
+            "crop_display_label": None,
+            "timeline_label": "Tomorrow",
+            "timeline_days": 1,
+            "radius_km": 8.0,
+            "market_opportunity_count": 4,
+            "status": "parsed",
+        }
+        repo.get_barter_request.side_effect = [initial_request, updated_request]
+        repo.count_candidate_inventory.return_value = 4
+        repo.list_trades.return_value = [{"id": "trade-1"}]
+        repo.list_planting_records_by_trade_ids.return_value = [{"id": "planting-1"}]
+        repo.list_harvest_listings_by_planting_ids.return_value = [{"id": "listing-1"}]
+        repo.list_barter_request_items.return_value = [
+            {
+                "item_role": "have",
+                "normalized_name": "nitrogen_fertilizer",
+                "display_name": "Nitrogen Fertilizer",
+                "category": "fertilizer",
+                "quantity": 4,
+                "unit": "bag",
+            },
+            {
+                "item_role": "need",
+                "normalized_name": "fungicide",
+                "display_name": "Fungicide",
+                "category": "fungicide",
+                "quantity": 2,
+                "unit": "liter",
+            },
+        ]
+
+        service = FarmerWorkflowService(
+            repo=repo,
+            demo_farmer_profile_id="11111111-1111-1111-1111-111111111111",
+            ai_orchestrator=None,
+        )
+
+        response = service.update_intake(
+            "request-123",
+            IntakeUpdateRequest(
+                crop_display_label=None,
+                timeline_label="Tomorrow",
+                timeline_days=1,
+                radius_km=8,
+                have_item=EditableBarterItemInput(
+                    normalized_name="nitrogen_fertilizer",
+                    display_name="Nitrogen Fertilizer",
+                    quantity=4,
+                    unit="bag",
+                ),
+                need_item=EditableBarterItemInput(
+                    normalized_name="fungicide",
+                    display_name="Fungicide",
+                    quantity=2,
+                    unit="liter",
+                ),
+            ),
+        )
+
+        repo.delete_listing_interests_by_listing_ids.assert_called_once_with(["listing-1"])
+        repo.delete_harvest_listings_by_ids.assert_called_once_with(["listing-1"])
+        repo.delete_planting_records_by_ids.assert_called_once_with(["planting-1"])
+        repo.delete_trades_by_ids.assert_called_once_with(["trade-1"])
+        repo.delete_proposals.assert_called_once_with("request-123")
+        repo.delete_matches.assert_called_once_with("request-123")
+        self.assertFalse(response.crop_detected)
+        self.assertIsNone(response.crop_display_label)
+        self.assertEqual(response.timeline_days, 1)
+        self.assertEqual(response.market_opportunity_count, 4)
+
+    def test_publish_harvest_listing_updates_status_and_timestamp(self) -> None:
+        repo = Mock()
+        listing_row = {
+            "id": "listing-123",
+            "planting_record_id": "planting-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+            "crop_code": "paddy",
+            "crop_label": "Premium Paddy MR269",
+            "listing_title": "Future Premium Paddy MR269 Supply",
+            "estimated_yield_min_kg": 10500,
+            "estimated_yield_max_kg": 14000,
+            "harvest_window_start": "2026-07-13",
+            "harvest_window_end": "2026-07-27",
+            "quality_band": "Grade A",
+            "confidence_score": 91.5,
+            "reservation_discount_pct": 10,
+            "early_incentive_label": "10% off for reservations",
+            "listing_note": "High-quality crop grown with carefully tracked inputs.",
+            "status": "draft",
+            "snapshot": {
+                "soil_vitality_label": "Stable Soil Health",
+                "yield_probability_label": "Grade A",
+            },
+        }
+        repo.get_harvest_listing.return_value = listing_row
+        repo.get_planting_record.return_value = {
+            "id": "planting-123",
+            "trade_id": "trade-123",
+            "farmer_profile_id": "11111111-1111-1111-1111-111111111111",
+        }
+        repo.update_harvest_listing.return_value = {
+            **listing_row,
+            "status": "published",
+            "published_at": "2026-03-31T12:15:00+00:00",
+            "snapshot": {
+                "soil_vitality_label": "Stable Soil Health",
+                "yield_probability_label": "Grade A",
+                "publish_channel": "future_supply_marketplace",
+                "publish_status_label": "Live in Buyer Marketplace",
+            },
+        }
+        repo.get_trade.return_value = {
+            "id": "trade-123",
+            "request_id": "request-123",
+        }
+        repo.list_listing_interests.return_value = [
+            {
+                "id": "interest-1",
+                "buyer_profile_id": "buyer-1",
+            },
+        ]
+        repo.get_profiles_by_ids.return_value = {
+            "buyer-1": {
+                "id": "buyer-1",
+                "display_name": "Mak Teh Grocer",
+                "avatar_url": None,
+            },
+        }
+
+        service = FarmerWorkflowService(
+            repo=repo,
+            demo_farmer_profile_id="11111111-1111-1111-1111-111111111111",
+            ai_orchestrator=None,
+        )
+
+        response = service.publish_harvest_listing("listing-123")
+
+        repo.update_harvest_listing.assert_called_once()
+        repo.update_barter_request.assert_called_once_with("request-123", {"status": "published"})
+        self.assertEqual(response.status, "published")
+        self.assertEqual(response.published_at, datetime(2026, 3, 31, 12, 15, tzinfo=timezone.utc))
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from app.schemas.farmer_flow import (
     HarvestListingResponse,
     IntakeCreateRequest,
     IntakeSummaryResponse,
+    IntakeUpdateRequest,
     MatchesResponse,
     PlantingCreateRequest,
     ProposalResponse,
@@ -29,6 +30,15 @@ def get_intake(
     service: FarmerWorkflowService = Depends(get_farmer_workflow_service),
 ) -> IntakeSummaryResponse:
     return service.get_intake(request_id)
+
+
+@router.patch("/intakes/{request_id}", response_model=IntakeSummaryResponse)
+def update_intake(
+    request_id: str,
+    payload: IntakeUpdateRequest,
+    service: FarmerWorkflowService = Depends(get_farmer_workflow_service),
+) -> IntakeSummaryResponse:
+    return service.update_intake(request_id, payload)
 
 
 @router.post("/intakes/{request_id}/matches", response_model=MatchesResponse)
@@ -78,3 +88,11 @@ def get_harvest_listing(
     service: FarmerWorkflowService = Depends(get_farmer_workflow_service),
 ) -> HarvestListingResponse:
     return service.get_harvest_listing(listing_id)
+
+
+@router.post("/harvest-listings/{listing_id}/publish", response_model=HarvestListingResponse)
+def publish_harvest_listing(
+    listing_id: str,
+    service: FarmerWorkflowService = Depends(get_farmer_workflow_service),
+) -> HarvestListingResponse:
+    return service.publish_harvest_listing(listing_id)

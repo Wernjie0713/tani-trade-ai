@@ -4,10 +4,9 @@ import { Navigate, useNavigate } from "react-router-dom"
 import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
-import { getHarvestListing } from "@/lib/farmerApi"
+import { getHarvestListing, publishHarvestListing } from "@/lib/farmerApi"
 import {
   defaultHarvestImage,
-  fallbackAvatar,
   formatConfidence,
   formatNumber,
 } from "@/lib/farmerFlow"
@@ -82,6 +81,10 @@ function FarmerFutureSupplyReadinessPage() {
     data: null,
     error: null,
   })
+  const [publishState, setPublishState] = useState({
+    status: "idle",
+    error: null,
+  })
 
   useEffect(() => {
     let isActive = true
@@ -129,12 +132,52 @@ function FarmerFutureSupplyReadinessPage() {
   }
 
   const listing = screenState.data
+  const publishButtonLabel = publishState.status === "loading"
+    ? "Publishing Listing..."
+    : listing?.status === "published"
+      ? "View Published Listing"
+      : "Publish Listing"
+
+  async function handlePublish() {
+    if (!listing?.harvest_listing_id) {
+      return
+    }
+
+    if (listing.status === "published") {
+      navigate(ROUTES.FARMER_LISTING_PUBLISHED)
+      return
+    }
+
+    setPublishState({
+      status: "loading",
+      error: null,
+    })
+
+    try {
+      const publishedListing = await publishHarvestListing(listing.harvest_listing_id)
+      setScreenState({
+        status: "success",
+        data: publishedListing,
+        error: null,
+      })
+      setPublishState({
+        status: "success",
+        error: null,
+      })
+      navigate(ROUTES.FARMER_LISTING_PUBLISHED)
+    } catch (error) {
+      setPublishState({
+        status: "error",
+        error: error.message || "Unable to publish this listing right now.",
+      })
+    }
+  }
 
   return (
     <PrototypePageFrame
       title="TaniTrade AI - Farmer Harvest Listing"
       htmlClass=""
-      bodyClass="bg-background text-on-surface min-h-screen pb-32"
+      bodyClass="bg-background text-on-surface min-h-screen pb-14"
       styles={styles}
       themeStyle={themeStyle}
     >
@@ -143,7 +186,7 @@ function FarmerFutureSupplyReadinessPage() {
         containerClassName="max-w-2xl"
         headerTitle="Harvest Listing"
       >
-        <main className="max-w-2xl mx-auto px-6 pt-6 pb-32 space-y-8">
+        <main className="max-w-2xl mx-auto px-6 pt-6 pb-24 space-y-8">
           <section className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black tracking-widest uppercase border border-primary/20">
               <span
@@ -174,6 +217,14 @@ function FarmerFutureSupplyReadinessPage() {
             <div className="rounded-[2rem] border border-error/20 bg-error-container/60 p-6 shadow-sm">
               <p className="text-sm font-semibold text-on-error-container">
                 {screenState.error}
+              </p>
+            </div>
+          )}
+
+          {publishState.error && (
+            <div className="rounded-[2rem] border border-error/20 bg-error-container/60 p-6 shadow-sm">
+              <p className="text-sm font-semibold text-on-error-container">
+                {publishState.error}
               </p>
             </div>
           )}
@@ -241,36 +292,6 @@ function FarmerFutureSupplyReadinessPage() {
                         "{listing.listing_note}"
                       </p>
                     </div>
-
-                    <div className="pt-6 border-t border-outline-variant/30 flex items-center justify-between">
-                      <div className="flex -space-x-2">
-                        {listing.buyer_previews.slice(0, 2).map((buyer) => (
-                          <div
-                            className="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container overflow-hidden"
-                            key={buyer.buyer_name}
-                          >
-                            <img
-                              alt={buyer.buyer_name}
-                              src={buyer.avatar_url || fallbackAvatar(buyer.buyer_name)}
-                            />
-                          </div>
-                        ))}
-                        {listing.buyer_interest_count > 2 && (
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-primary text-[10px] text-on-primary font-bold">
-                            +{listing.buyer_interest_count - 2}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        <span className="text-[11px] font-bold text-primary tracking-wide">
-                          {listing.buyer_interest_count} BUYERS SEEING THIS SUPPLY
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -293,15 +314,15 @@ function FarmerFutureSupplyReadinessPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="bg-primary/20 px-3 py-1 rounded-full border border-primary/40 mb-1">
-                        <span className="text-primary-fixed font-black text-[11px] tracking-tight">
-                          {formatConfidence(listing.confidence_score)}% CONFIDENCE
+                    <div className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2.5">
+                      <div className="flex items-center gap-2 text-primary-fixed">
+                        <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          auto_awesome
+                        </span>
+                        <span className="text-[11px] font-black uppercase tracking-[0.18em]">
+                          {formatConfidence(listing.confidence_score)}% Confidence
                         </span>
                       </div>
-                      <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest">
-                        Real-time Verified
-                      </p>
                     </div>
                   </div>
 
@@ -337,10 +358,11 @@ function FarmerFutureSupplyReadinessPage() {
             <div className="flex flex-col gap-4">
               <button
                 className="w-full bg-primary text-on-primary py-5 rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3"
-                onClick={() => navigate(ROUTES.HOME)}
+                disabled={publishState.status === "loading" || !listing}
+                onClick={handlePublish}
                 type="button"
               >
-                Publish Listing
+                {publishButtonLabel}
                 <span className="material-symbols-outlined text-xl">rocket_launch</span>
               </button>
               <button

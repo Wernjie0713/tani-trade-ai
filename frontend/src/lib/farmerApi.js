@@ -17,6 +17,13 @@ export function getFarmerIntake(requestId) {
   return apiRequest(`/farmer/intakes/${requestId}`)
 }
 
+export function updateFarmerIntake(requestId, payload) {
+  return apiRequest(`/farmer/intakes/${requestId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
+}
+
 export function getOrCreateFarmerMatches(requestId) {
   return apiRequest(`/farmer/intakes/${requestId}/matches`, {
     method: "POST",
@@ -58,4 +65,10 @@ export function createOrUpdatePlanting(tradeId, payload) {
 
 export function getHarvestListing(listingId) {
   return apiRequest(`/farmer/harvest-listings/${listingId}`)
+}
+
+export function publishHarvestListing(listingId) {
+  return apiRequest(`/farmer/harvest-listings/${listingId}/publish`, {
+    method: "POST",
+  })
 }

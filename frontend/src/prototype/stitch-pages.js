@@ -2,6 +2,7 @@ import AiTradeProposalPage from "@/pages/prototype/AiTradeProposalPage"
 import BuyerMarketplacePage from "@/pages/prototype/BuyerMarketplacePage"
 import FarmerVoiceInputPage from "@/pages/prototype/FarmerVoiceInputPage"
 import FarmerFutureSupplyReadinessPage from "@/pages/prototype/FarmerFutureSupplyReadinessPage"
+import FarmerListingPublishedPage from "@/pages/prototype/FarmerListingPublishedPage"
 import FutureSupplyReadinessPage from "@/pages/prototype/FutureSupplyReadinessPage"
 import LandingRoleSelectionPage from "@/pages/prototype/LandingRoleSelectionPage"
 import NearbyBarterMatchesPage from "@/pages/prototype/NearbyBarterMatchesPage"
@@ -66,6 +67,13 @@ export const prototypePages = [
     label: "Farmer future supply readiness",
     description: "Farmer-side harvest listing preview after planting.",
     component: FarmerFutureSupplyReadinessPage,
+  },
+  {
+    path: "/farmer/listing-published",
+    group: "Farmer Flow",
+    label: "Farmer listing published",
+    description: "Farmer-side publish confirmation after pushing a listing live.",
+    component: FarmerListingPublishedPage,
   },
   {
     path: "/buyer/marketplace",

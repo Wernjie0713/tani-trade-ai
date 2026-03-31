@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -14,6 +14,7 @@ from app.schemas.farmer_flow import (
     DemoProfile,
     BuyerPreview,
     HarvestListingResponse,
+    IntakeUpdateRequest,
     MatchCardResponse,
     MatchesResponse,
     PlantingCreateRequest,
@@ -22,7 +23,14 @@ from app.schemas.farmer_flow import (
     TradeResponse,
 )
 from app.services.ai.orchestrator import FarmerAiOrchestrator
-from app.services.catalog import crop_label, find_crop_code
+from app.services.catalog import (
+    UNIT_ALIASES,
+    crop_label,
+    find_crop_code,
+    find_item_code,
+    item_category,
+    item_display_name,
+)
 from app.services.matching import distance_score, haversine_km, total_match_score, trust_score
 from app.services.parser import parse_intake
 from app.services.projections import build_harvest_projection
@@ -53,11 +61,7 @@ class FarmerWorkflowService:
                 preferred_language=demo_profile["preferred_language"],
                 trust_score=float(demo_profile["trust_score"]),
             ),
-            quick_prompts=[
-                "I have 5 bags of surplus fertilizer and I need organic pesticide",
-                "Saya ada baja nitrogen lebih dan perlukan racun organik minggu depan",
-                "I need seedling trays for sweet corn planting next week",
-            ],
+            quick_prompts=self._build_quick_prompts(demo_profile),
             active_flow=ActiveFlowIds(**latest_flow),
         )
 
@@ -89,6 +93,8 @@ class FarmerWorkflowService:
                 "raw_text": parsed.raw_text,
                 "crop_code": parsed.crop_code,
                 "crop_label": parsed.crop_label,
+                "crop_detected": parsed.crop_detected,
+                "crop_display_label": parsed.crop_display_label,
                 "timeline_label": parsed.timeline_label,
                 "timeline_days": parsed.timeline_days,
                 "radius_km": parsed.radius_km,
@@ -112,6 +118,8 @@ class FarmerWorkflowService:
         request_row = self._require_request(request_id)
         items = self.repo.list_barter_request_items(request_id)
         items_by_role = self._items_by_role(items)
+        crop_detected = self._coerce_crop_detected(request_row)
+        crop_display_label = self._resolve_crop_display_label(request_row, crop_detected)
 
         return IntakeSummaryResponse(
             request_id=request_row["id"],
@@ -119,6 +127,8 @@ class FarmerWorkflowService:
             raw_text=request_row["raw_text"],
             crop_code=request_row["crop_code"],
             crop_label=request_row["crop_label"],
+            crop_detected=crop_detected,
+            crop_display_label=crop_display_label,
             timeline_label=request_row["timeline_label"],
             timeline_days=int(request_row["timeline_days"]),
             radius_km=float(request_row["radius_km"]),
@@ -129,6 +139,54 @@ class FarmerWorkflowService:
             have_item=BarterItemDto(**items_by_role["have"]),
             need_item=BarterItemDto(**items_by_role["need"]),
         )
+
+    def update_intake(self, request_id: str, payload: IntakeUpdateRequest) -> IntakeSummaryResponse:
+        request_row = self._require_request(request_id)
+
+        have_item = self._normalize_item_update(payload.have_item.model_dump())
+        need_item = self._normalize_item_update(payload.need_item.model_dump())
+
+        crop_display_label = (payload.crop_display_label or "").strip() or None
+        crop_code = find_crop_code(crop_display_label or "") or request_row["crop_code"]
+        crop_detected = bool(crop_display_label)
+        market_opportunity_count = self.repo.count_candidate_inventory(
+            need_item["normalized_name"],
+            self.demo_farmer_profile_id,
+        )
+
+        self._invalidate_request_workflow(request_id)
+        self.repo.update_barter_request(
+            request_id,
+            {
+                "crop_code": crop_code,
+                "crop_label": crop_display_label or crop_label(crop_code),
+                "crop_detected": crop_detected,
+                "crop_display_label": crop_display_label,
+                "timeline_label": payload.timeline_label.strip(),
+                "timeline_days": payload.timeline_days,
+                "radius_km": round(payload.radius_km, 1),
+                "urgency": self._urgency_from_timeline_days(payload.timeline_days),
+                "market_opportunity_count": market_opportunity_count,
+                "status": "parsed",
+            },
+        )
+        self.repo.replace_barter_request_items(
+            request_id,
+            [
+                {
+                    "request_id": request_id,
+                    "item_role": "have",
+                    **have_item,
+                },
+                {
+                    "request_id": request_id,
+                    "item_role": "need",
+                    **need_item,
+                },
+            ],
+        )
+
+        return self.get_intake(request_id)
 
     def get_or_create_matches(self, request_id: str) -> MatchesResponse:
         request_row = self._require_request(request_id)
@@ -212,7 +270,7 @@ class FarmerWorkflowService:
                         "offered_item_normalized_name": candidate["normalized_item_name"],
                         "offered_quantity": float(candidate["quantity"]),
                         "offered_unit": candidate["unit"],
-                        "desired_item_name": candidate.get("desired_item_name") or "",
+                        "desired_item_name": self._resolve_snapshot_item_name(candidate.get("desired_item_name")),
                         "desired_priority": candidate.get("desired_priority") or "Open to trade",
                         "insight": self._build_match_insight(counterparty["display_name"], candidate["item_name"], need_item["display_name"], have_item["display_name"]),
                     },
@@ -531,6 +589,53 @@ class FarmerWorkflowService:
             planting_row["id"],
         )
 
+    def publish_harvest_listing(self, listing_id: str) -> HarvestListingResponse:
+        listing = self.repo.get_harvest_listing(listing_id)
+        if listing is None or listing["farmer_profile_id"] != self.demo_farmer_profile_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Harvest listing not found.")
+
+        planting_row = self.repo.get_planting_record(listing["planting_record_id"])
+        if planting_row is None or planting_row["farmer_profile_id"] != self.demo_farmer_profile_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Planting record not found for this harvest listing.",
+            )
+
+        if listing["status"] not in {"draft", "published"}:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Only draft or published listings can be managed from this screen.",
+            )
+
+        published_at = listing.get("published_at") or datetime.now(tz=timezone.utc).isoformat()
+        updated_snapshot = {
+            **(listing.get("snapshot") or {}),
+            "publish_channel": "future_supply_marketplace",
+            "publish_status_label": "Live in Buyer Marketplace",
+        }
+
+        listing = self.repo.update_harvest_listing(
+            listing_id,
+            {
+                "status": "published",
+                "published_at": published_at,
+                "snapshot": updated_snapshot,
+            },
+        )
+
+        trade = self.repo.get_trade(planting_row["trade_id"])
+        if trade is not None:
+            self.repo.update_barter_request(trade["request_id"], {"status": "published"})
+
+        interests = self.repo.list_listing_interests(listing_id)
+        buyers = self.repo.get_profiles_by_ids([row["buyer_profile_id"] for row in interests])
+        return self._build_harvest_listing_response(
+            listing,
+            interests,
+            list(buyers.values()),
+            planting_row["id"],
+        )
+
     def _require_demo_farmer(self) -> dict[str, Any]:
         demo_profile = self.repo.get_profile(self.demo_farmer_profile_id)
         if demo_profile is None:
@@ -546,6 +651,115 @@ class FarmerWorkflowService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Barter request not found.")
         return request_row
 
+    def _build_quick_prompts(self, farmer_profile: dict[str, Any]) -> list[str]:
+        crop_profiles = self.repo.list_crop_profiles()
+        own_inventory = self.repo.list_inventory_by_owner(self.demo_farmer_profile_id)
+        other_inventory = self.repo.list_available_inventory(self.demo_farmer_profile_id)
+        profiles = self.repo.get_profiles_by_ids([row["owner_profile_id"] for row in other_inventory])
+        prompts = []
+
+        for index, inventory_row in enumerate(own_inventory):
+            crop_profile = crop_profiles[index % max(len(crop_profiles), 1)] if crop_profiles else {
+                "label": "Paddy (MR269)",
+            }
+            preferred_need = self._select_prompt_need_item(
+                farmer_profile=farmer_profile,
+                own_inventory_row=inventory_row,
+                other_inventory=other_inventory,
+                profile_lookup=profiles,
+            )
+            prompts.append(
+                "I am planting "
+                f"{crop_profile['label']} and I have {self._format_prompt_quantity(inventory_row['quantity'], inventory_row['unit'])} "
+                f"of {inventory_row['item_name']} to trade for {preferred_need}."
+            )
+            if len(prompts) == 3:
+                return prompts
+
+        if not prompts:
+            fallback_crop = crop_profiles[0]["label"] if crop_profiles else "Paddy (MR269)"
+            prompts.append(
+                f"I am planting {fallback_crop} and I have surplus fertilizer to trade for organic pesticide."
+            )
+
+        while len(prompts) < 3:
+            prompts.append(prompts[len(prompts) % len(prompts)])
+
+        return prompts
+
+    def _select_prompt_need_item(
+        self,
+        *,
+        farmer_profile: dict[str, Any],
+        own_inventory_row: dict[str, Any],
+        other_inventory: list[dict[str, Any]],
+        profile_lookup: dict[str, dict[str, Any]],
+    ) -> str:
+        nearby_candidates = []
+        for candidate in other_inventory:
+            if candidate.get("desired_item_name") != own_inventory_row["normalized_item_name"]:
+                continue
+
+            counterparty = profile_lookup.get(candidate["owner_profile_id"])
+            if counterparty is None:
+                continue
+
+            distance_km = haversine_km(
+                float(farmer_profile["latitude"]),
+                float(farmer_profile["longitude"]),
+                float(counterparty["latitude"]),
+                float(counterparty["longitude"]),
+            )
+            nearby_candidates.append((distance_km, candidate))
+
+        if nearby_candidates:
+            nearby_candidates.sort(key=lambda entry: entry[0])
+            return nearby_candidates[0][1]["item_name"]
+
+        desired_item_name = own_inventory_row.get("desired_item_name")
+        if desired_item_name:
+            return item_display_name(desired_item_name, desired_item_name.replace("_", " ").title())
+
+        return "organic pesticide"
+
+    def _format_prompt_quantity(self, quantity: Any, unit: str) -> str:
+        value = float(quantity)
+        if value.is_integer():
+            formatted_quantity = str(int(value))
+        else:
+            formatted_quantity = f"{value:.1f}".rstrip("0").rstrip(".")
+
+        normalized_unit = UNIT_ALIASES.get(unit.lower(), unit.lower())
+        plural_unit = normalized_unit if formatted_quantity == "1" else self._pluralize_unit(normalized_unit)
+        return f"{formatted_quantity} {plural_unit}"
+
+    def _pluralize_unit(self, unit: str) -> str:
+        irregular = {
+            "liter": "liters",
+            "bag": "bags",
+            "set": "sets",
+            "crate": "crates",
+            "pack": "packs",
+            "tray": "trays",
+            "roll": "rolls",
+            "bundle": "bundles",
+            "kg": "kg",
+            "g": "g",
+        }
+        return irregular.get(unit, f"{unit}s")
+
+    def _coerce_crop_detected(self, request_row: dict[str, Any]) -> bool:
+        if "crop_detected" in request_row:
+            return bool(request_row["crop_detected"])
+        return find_crop_code(request_row.get("raw_text", "")) is not None
+
+    def _resolve_crop_display_label(self, request_row: dict[str, Any], crop_detected: bool) -> str | None:
+        if request_row.get("crop_display_label"):
+            return request_row["crop_display_label"]
+        if crop_detected:
+            return request_row.get("crop_label") or crop_label(request_row["crop_code"])
+        return None
+
     def _item_payload(self, request_id: str, item_role: str, item: Any) -> dict[str, Any]:
         return {
             "request_id": request_id,
@@ -556,6 +770,39 @@ class FarmerWorkflowService:
             "quantity": item.quantity,
             "unit": item.unit,
         }
+
+    def _normalize_item_update(self, payload: dict[str, Any]) -> dict[str, Any]:
+        normalized_name = (
+            find_item_code(payload["normalized_name"])
+            or find_item_code(payload["display_name"])
+            or payload["normalized_name"].strip().lower().replace(" ", "_")
+        )
+        normalized_unit = UNIT_ALIASES.get(payload["unit"].strip().lower(), payload["unit"].strip().lower())
+        return {
+            "normalized_name": normalized_name,
+            "display_name": item_display_name(normalized_name, payload["display_name"].strip()),
+            "category": item_category(normalized_name),
+            "quantity": payload["quantity"],
+            "unit": normalized_unit,
+        }
+
+    def _urgency_from_timeline_days(self, timeline_days: int) -> str:
+        return "high" if timeline_days <= 1 else "medium"
+
+    def _invalidate_request_workflow(self, request_id: str) -> None:
+        trade_rows = self.repo.list_trades(request_id)
+        trade_ids = [row["id"] for row in trade_rows]
+        planting_rows = self.repo.list_planting_records_by_trade_ids(trade_ids)
+        planting_ids = [row["id"] for row in planting_rows]
+        listing_rows = self.repo.list_harvest_listings_by_planting_ids(planting_ids)
+        listing_ids = [row["id"] for row in listing_rows]
+
+        self.repo.delete_listing_interests_by_listing_ids(listing_ids)
+        self.repo.delete_harvest_listings_by_ids(listing_ids)
+        self.repo.delete_planting_records_by_ids(planting_ids)
+        self.repo.delete_trades_by_ids(trade_ids)
+        self.repo.delete_proposals(request_id)
+        self.repo.delete_matches(request_id)
 
     def _items_by_role(self, rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         items = {row["item_role"]: row for row in rows}
@@ -629,7 +876,7 @@ class FarmerWorkflowService:
                     offered_item_name=snapshot.get("offered_item_name", ""),
                     offered_quantity=float(snapshot.get("offered_quantity", 0)),
                     offered_unit=snapshot.get("offered_unit", "unit"),
-                    desired_item_name=snapshot.get("desired_item_name", ""),
+                    desired_item_name=self._resolve_snapshot_item_name(snapshot.get("desired_item_name")),
                     desired_item_priority=snapshot.get("desired_priority", "Open to trade"),
                     rationale=match["rationale"],
                     insight=snapshot.get("insight", ""),
@@ -734,6 +981,7 @@ class FarmerWorkflowService:
             buyer_interest_count=len(interest_rows),
             buyer_previews=buyer_previews,
             status=listing_row["status"],
+            published_at=self._coerce_datetime(listing_row["published_at"]) if listing_row.get("published_at") else None,
         )
 
     def _build_match_rationale(self, counterparty_name: str, offered_item_name: str, have_item_name: str) -> str:
@@ -753,6 +1001,14 @@ class FarmerWorkflowService:
             f"{counterparty_name}'s {offered_item_name} directly addresses your {requested_item_name}. "
             f"The match also values your {have_item_name} as a useful reciprocal trade."
         )
+
+    def _resolve_snapshot_item_name(self, value: str | None) -> str:
+        if not value:
+            return ""
+
+        normalized_name = find_item_code(value) or value.strip().lower().replace(" ", "_")
+        fallback = value.replace("_", " ").title()
+        return item_display_name(normalized_name, fallback)
 
     def _select_meeting_point(self, counterparty_profile: dict[str, Any]) -> dict[str, Any]:
         farmer = self._require_demo_farmer()

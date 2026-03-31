@@ -81,9 +81,9 @@ function FarmerVoiceInputPage() {
   const promptSuggestions = bootstrap?.quick_prompts?.length
     ? bootstrap.quick_prompts
     : [
-        "I need pesticide",
-        "What can I trade for seeds?",
-        "Planting paddy next week",
+        "I am planting Paddy (MR269) and I have surplus fertilizer to trade for organic pesticide.",
+        "I am planting Sweet Corn and I need seedling trays for next week.",
+        "I am planting Chili and I have compost tea to trade for bamboo stakes.",
       ]
 
   async function handleSubmit() {

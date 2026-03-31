@@ -15,6 +15,8 @@ class IntakeParserTests(unittest.TestCase):
         )
 
         self.assertEqual(parsed.crop_code, "paddy")
+        self.assertTrue(parsed.crop_detected)
+        self.assertEqual(parsed.crop_display_label, "Paddy (MR269)")
         self.assertEqual(parsed.timeline_label, "Next Week")
         self.assertEqual(parsed.radius_km, 5.0)
         self.assertEqual(parsed.have_item.normalized_name, "nitrogen_fertilizer")
@@ -33,6 +35,25 @@ class IntakeParserTests(unittest.TestCase):
         self.assertEqual(parsed.have_item.quantity, 5.0)
         self.assertEqual(parsed.have_item.unit, "bag")
         self.assertEqual(parsed.need_item.normalized_name, "organic_pesticide")
+
+    def test_parse_without_crop_keeps_internal_default_but_marks_not_detected(self) -> None:
+        parsed = parse_intake(
+            "I have 5 bags of surplus fertilizer and I need organic pesticide.",
+        )
+
+        self.assertEqual(parsed.crop_code, "paddy")
+        self.assertFalse(parsed.crop_detected)
+        self.assertIsNone(parsed.crop_display_label)
+
+    def test_parse_extended_aliases(self) -> None:
+        parsed = parse_intake(
+            "Saya tanam cili dan ada 2 roll mulch sheet lebih, perlukan racun kulat minggu ini.",
+        )
+
+        self.assertEqual(parsed.crop_code, "chili")
+        self.assertEqual(parsed.have_item.normalized_name, "mulch_sheet")
+        self.assertEqual(parsed.need_item.normalized_name, "fungicide")
+        self.assertEqual(parsed.timeline_label, "This Week")
 
 
 class MatchingTests(unittest.TestCase):

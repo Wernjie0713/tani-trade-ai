@@ -216,31 +216,40 @@ function NearbyBarterMatchesPage() {
               <div className="relative group">
                 <div className="absolute -inset-1.5 bg-gradient-to-r from-primary via-tertiary to-primary rounded-[3.25rem] opacity-20 blur-xl group-hover:opacity-40 transition-opacity"></div>
                 <div className="ai-border-gradient rounded-[3rem] shadow-2xl moss-glow relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-primary text-on-primary px-6 py-2 rounded-bl-3xl z-10 flex items-center gap-2 shadow-lg">
-                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>insights</span>
-                    <span className="text-[11px] font-extrabold uppercase tracking-widest">Optimized Match</span>
-                  </div>
-
                   <div className="ai-inner-card p-8">
-                    <div className="flex justify-between items-start mb-8">
-                      <div className="flex gap-4 items-center">
+                    <div className="mb-7 flex items-start justify-end">
+                      <div className="inline-flex items-center gap-2.5 rounded-full border border-primary/10 bg-gradient-to-r from-primary/5 via-surface-container-lowest to-tertiary/10 px-3 py-2 shadow-sm">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                            auto_awesome
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-[0.16em] text-on-surface-variant">
+                            AI Rating
+                          </span>
+                          <span className="font-headline text-[1.65rem] font-black leading-none text-primary">
+                            {topMatch.total_score}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-8 flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 gap-4 items-center">
                         <div className="relative">
                           <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20 p-1">
                             <img alt={topMatch.counterparty_name} className="w-full h-full object-cover rounded-full" src={topMatch.counterparty_avatar_url || fallbackAvatar(topMatch.counterparty_name)} />
                           </div>
                           <div className="absolute bottom-0 right-0 bg-green-500 w-5 h-5 rounded-full border-4 border-white"></div>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <h3 className="font-headline font-black text-2xl text-on-surface">{topMatch.counterparty_name}</h3>
-                          <div className="flex items-center gap-1 text-primary font-bold text-sm">
+                          <div className="mt-1 flex items-center gap-1 text-primary font-bold text-sm">
                             <span className="material-symbols-outlined text-[18px]">location_on</span>
-                            <span>{formatNumber(topMatch.distance_km)}km - Active Now</span>
+                            <span className="leading-snug">{formatNumber(topMatch.distance_km)}km - Active Now</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-primary font-black text-3xl leading-none">{topMatch.total_score}%</span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">AI Rating</span>
                       </div>
                     </div>
 

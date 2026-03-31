@@ -31,6 +31,8 @@ class ParsedIntake:
     raw_text: str
     crop_code: str
     crop_label: str
+    crop_detected: bool
+    crop_display_label: str | None
     timeline_label: str
     timeline_days: int
     radius_km: float
@@ -55,7 +57,8 @@ NEED_SEGMENT_PATTERNS = [
 
 def parse_intake(raw_text: str) -> ParsedIntake:
     normalized = normalize_phrase(raw_text)
-    crop_code = find_crop_code(normalized) or "paddy"
+    detected_crop_code = find_crop_code(normalized)
+    crop_code = detected_crop_code or "paddy"
     timeline_label, timeline_days = _extract_timeline(normalized)
     radius_km = _extract_radius(normalized)
     urgency = _extract_urgency(normalized, timeline_days)
@@ -82,6 +85,8 @@ def parse_intake(raw_text: str) -> ParsedIntake:
         raw_text=raw_text.strip(),
         crop_code=crop_code,
         crop_label=crop_label(crop_code),
+        crop_detected=detected_crop_code is not None,
+        crop_display_label=crop_label(detected_crop_code) if detected_crop_code else None,
         timeline_label=timeline_label,
         timeline_days=timeline_days,
         radius_km=radius_km,

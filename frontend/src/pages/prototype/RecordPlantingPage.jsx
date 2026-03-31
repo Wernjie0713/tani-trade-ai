@@ -1,15 +1,15 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Navigate, useNavigate } from "react-router-dom"
 
 import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { createOrUpdatePlanting } from "@/lib/farmerApi"
-import { normalizePlantingDate, parseAreaInput } from "@/lib/farmerFlow"
+import { normalizePlantingDate } from "@/lib/farmerFlow"
 import { ROUTES } from "@/prototype/routes"
 
 const styles = [
-  "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        -webkit-tap-highlight-color: transparent;\n      }\n      .glass-card {\n        background: rgba(255, 255, 255, 0.7);\n        backdrop-filter: blur(20px);\n        -webkit-backdrop-filter: blur(20px);\n      }\n      .shimmer-bg {\n        background: linear-gradient(90deg, rgba(74, 103, 65, 0.05) 25%, rgba(74, 103, 65, 0.1) 50%, rgba(74, 103, 65, 0.05) 75%);\n        background-size: 200% 100%;\n        animation: shimmer 3s infinite linear;\n      }\n      @keyframes shimmer {\n        0% { background-position: 200% 0; }\n        100% { background-position: -200% 0; }\n      }\n      .premium-input-ring {\n        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n      }\n      .premium-input-ring:focus-within {\n        box-shadow: 0 0 0 2px #4A6741;\n      }\n    ",
+  "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        -webkit-tap-highlight-color: transparent;\n      }\n      .glass-card {\n        background: rgba(255, 255, 255, 0.7);\n        backdrop-filter: blur(20px);\n        -webkit-backdrop-filter: blur(20px);\n      }\n      .shimmer-bg {\n        background: linear-gradient(90deg, rgba(74, 103, 65, 0.05) 25%, rgba(74, 103, 65, 0.1) 50%, rgba(74, 103, 65, 0.05) 75%);\n        background-size: 200% 100%;\n        animation: shimmer 3s infinite linear;\n      }\n      @keyframes shimmer {\n        0% { background-position: 200% 0; }\n        100% { background-position: -200% 0; }\n      }\n      .premium-input-ring {\n        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n      }\n      .premium-input-ring:focus-within {\n        border-color: rgba(74, 103, 65, 0.38);\n        box-shadow: 0 0 0 2px #4A6741, 0 0 0 5px rgba(74, 103, 65, 0.08);\n      }\n    ",
 ]
 
 const themeStyle = {
@@ -69,13 +69,28 @@ const themeStyle = {
   "--radius-xl": "3rem",
 }
 
+const AREA_UNIT_OPTIONS = [
+  { label: "hectares", value: "hectares" },
+  { label: "acres", value: "acres" },
+  { label: "plots", value: "plots" },
+]
+
+const TAB_FILL_VALUES = {
+  cropType: "Premium Paddy MR269",
+  plantingDate: "2026-04-01",
+  areaValue: "2.5",
+  inputSummary: "Organic fertilizer blend, foliar micronutrients, and measured pest control spray.",
+}
+
 function RecordPlantingPage() {
   const navigate = useNavigate()
   const { flowIds, updateFlowIds } = useFarmerFlow()
+  const plantingDateRef = useRef(null)
   const [form, setForm] = useState({
     cropType: "",
     plantingDate: "",
-    plotSize: "",
+    areaValue: "",
+    areaUnit: "hectares",
     inputSummary: "",
   })
   const [submitState, setSubmitState] = useState({
@@ -94,13 +109,28 @@ function RecordPlantingPage() {
     }))
   }
 
+  function handleTabFill(field) {
+    return (event) => {
+      if (event.key !== "Tab" || event.shiftKey) {
+        return
+      }
+
+      if (String(form[field] || "").trim()) {
+        return
+      }
+
+      updateField(field, TAB_FILL_VALUES[field])
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
 
     const plantingDate = normalizePlantingDate(form.plantingDate)
-    const area = parseAreaInput(form.plotSize)
+    const areaValue = Number(form.areaValue)
+    const hasValidArea = Number.isFinite(areaValue) && areaValue > 0
 
-    if (!form.cropType.trim() || !plantingDate || !area || !form.inputSummary.trim()) {
+    if (!form.cropType.trim() || !plantingDate || !hasValidArea || !form.inputSummary.trim()) {
       setSubmitState({
         status: "error",
         error: "Enter crop type, planting date, cultivation area, and inputs before generating the harvest listing.",
@@ -117,8 +147,8 @@ function RecordPlantingPage() {
       const listing = await createOrUpdatePlanting(flowIds.tradeId, {
         crop_type: form.cropType.trim(),
         planting_date: plantingDate,
-        area_value: area.areaValue,
-        area_unit: area.areaUnit,
+        area_value: areaValue,
+        area_unit: form.areaUnit,
         input_summary: form.inputSummary.trim(),
       })
 
@@ -170,7 +200,15 @@ function RecordPlantingPage() {
                 <span className="text-[11px] font-semibold text-primary/60 italic">Critical for yield modeling</span>
               </div>
               <div className="relative premium-input-ring rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30">
-                <input className="w-full bg-transparent border-none rounded-full px-6 py-5 focus:ring-0 text-on-surface font-semibold placeholder:text-outline/50 text-base" id="crop_type" onChange={(event) => updateField("cropType", event.target.value)} placeholder="e.g., Premium Paddy MR269" type="text" value={form.cropType} />
+                <input
+                  className="w-full rounded-full border-none bg-transparent px-6 py-5 text-base font-semibold text-on-surface placeholder:text-outline/50 focus:outline-none focus:ring-0"
+                  id="crop_type"
+                  onChange={(event) => updateField("cropType", event.target.value)}
+                  onKeyDown={handleTabFill("cropType")}
+                  placeholder={TAB_FILL_VALUES.cropType}
+                  type="text"
+                  value={form.cropType}
+                />
               </div>
             </div>
 
@@ -180,7 +218,29 @@ function RecordPlantingPage() {
                 <span className="text-[11px] font-semibold text-primary/60 italic">Sets harvest window</span>
               </div>
               <div className="relative premium-input-ring rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30">
-                <input className="w-full bg-transparent border-none rounded-full px-6 py-5 focus:ring-0 text-on-surface font-semibold placeholder:text-outline/50 text-base" id="planting_date" onChange={(event) => updateField("plantingDate", event.target.value)} placeholder="e.g., 2026-04-01" type="text" value={form.plantingDate} />
+                <input
+                  ref={plantingDateRef}
+                  className="w-full rounded-full border-none bg-transparent px-6 py-5 pr-16 text-base font-semibold text-on-surface focus:outline-none focus:ring-0"
+                  id="planting_date"
+                  onChange={(event) => updateField("plantingDate", event.target.value)}
+                  onKeyDown={handleTabFill("plantingDate")}
+                  type="date"
+                  value={form.plantingDate}
+                />
+                <button
+                  aria-label="Open date picker"
+                  className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-sm transition-colors hover:bg-surface"
+                  onClick={() => {
+                    if (typeof plantingDateRef.current?.showPicker === "function") {
+                      plantingDateRef.current.showPicker()
+                      return
+                    }
+                    plantingDateRef.current?.focus()
+                  }}
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                </button>
               </div>
             </div>
 
@@ -189,8 +249,37 @@ function RecordPlantingPage() {
                 <label className="font-label text-[13px] font-bold text-primary uppercase tracking-wider" htmlFor="plot_size">Cultivation Area</label>
                 <span className="text-[11px] font-semibold text-primary/60 italic">Calculates total volume</span>
               </div>
-              <div className="relative premium-input-ring rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30">
-                <input className="w-full bg-transparent border-none rounded-full px-6 py-5 focus:ring-0 text-on-surface font-semibold placeholder:text-outline/50 text-base" id="plot_size" onChange={(event) => updateField("plotSize", event.target.value)} placeholder="e.g., 2.5 hectares" type="text" value={form.plotSize} />
+              <div className="grid grid-cols-[minmax(0,1fr)_10rem] gap-3">
+                <div className="relative premium-input-ring rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30">
+                  <input
+                    className="w-full rounded-full border-none bg-transparent px-6 py-5 text-base font-semibold text-on-surface placeholder:text-outline/50 focus:outline-none focus:ring-0"
+                    id="plot_size"
+                    inputMode="decimal"
+                    min="0.1"
+                    onChange={(event) => updateField("areaValue", event.target.value)}
+                    onKeyDown={handleTabFill("areaValue")}
+                    placeholder={TAB_FILL_VALUES.areaValue}
+                    step="0.1"
+                    type="number"
+                    value={form.areaValue}
+                  />
+                </div>
+                <div className="relative premium-input-ring rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30">
+                  <select
+                    className="w-full appearance-none rounded-full border-none bg-transparent px-5 py-5 pr-12 text-base font-semibold text-on-surface focus:outline-none focus:ring-0"
+                    onChange={(event) => updateField("areaUnit", event.target.value)}
+                    value={form.areaUnit}
+                  >
+                    {AREA_UNIT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="material-symbols-outlined pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[20px] text-primary/80">
+                    expand_more
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -200,7 +289,15 @@ function RecordPlantingPage() {
                 <span className="text-[11px] font-semibold text-primary/60 italic">Boosts listing premium</span>
               </div>
               <div className="relative premium-input-ring rounded-[2rem] overflow-hidden bg-surface-container-high border border-outline-variant/30">
-                <textarea className="w-full bg-transparent border-none rounded-[2rem] px-6 py-5 focus:ring-0 text-on-surface font-semibold placeholder:text-outline/50 text-base resize-none" id="inputs" onChange={(event) => updateField("inputSummary", event.target.value)} placeholder="List fertilizers, organic treatments, or pesticides used..." rows="3" value={form.inputSummary}></textarea>
+                <textarea
+                  className="w-full resize-none rounded-[2rem] border-none bg-transparent px-6 py-5 text-base font-semibold leading-relaxed text-on-surface placeholder:text-outline/50 focus:outline-none focus:ring-0"
+                  id="inputs"
+                  onChange={(event) => updateField("inputSummary", event.target.value)}
+                  onKeyDown={handleTabFill("inputSummary")}
+                  placeholder="List fertilizers, organic treatments, or pesticides used..."
+                  rows="3"
+                  value={form.inputSummary}
+                ></textarea>
               </div>
             </div>
 
@@ -228,9 +325,6 @@ function RecordPlantingPage() {
                 <span>{submitState.status === "loading" ? "Generating Listing..." : "Generate Harvest Listing"}</span>
                 <span className="material-symbols-outlined transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
               </button>
-              <p className="text-center text-[11px] font-bold text-on-surface-variant/40 mt-4 uppercase tracking-[0.15em]">
-                Secure Blockchain Registry Enabled
-              </p>
             </div>
           </form>
         </main>

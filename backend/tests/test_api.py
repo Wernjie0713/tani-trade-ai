@@ -19,6 +19,7 @@ from app.schemas.farmer_flow import (
     MatchCardResponse,
     MatchesResponse,
     ProposalResponse,
+    IntakeUpdateRequest,
     TradeResponse,
 )
 
@@ -42,7 +43,7 @@ class FakeFarmerWorkflowService:
                 trust_score=4.9,
             ),
             quick_prompts=[
-                "I have surplus fertilizer and need pesticide",
+                "I am planting Paddy (MR269) and I have surplus fertilizer to trade for organic pesticide.",
             ],
             active_flow=ActiveFlowIds(),
         )
@@ -61,6 +62,8 @@ class FakeFarmerWorkflowService:
             raw_text="I have 5 bags fertilizer and need pesticide.",
             crop_code="paddy",
             crop_label="Paddy (MR269)",
+            crop_detected=False,
+            crop_display_label=None,
             timeline_label="Next Week",
             timeline_days=7,
             radius_km=5.0,
@@ -82,6 +85,34 @@ class FakeFarmerWorkflowService:
                 quantity=3,
                 unit="liter",
             ),
+        )
+
+    def update_intake(self, request_id: str, payload: IntakeUpdateRequest) -> IntakeSummaryResponse:
+        if request_id != REQUEST_ID:
+            raise HTTPException(status_code=404, detail="Barter request not found.")
+        summary = self.get_intake(request_id)
+        return summary.model_copy(
+            update={
+                "crop_detected": bool(payload.crop_display_label),
+                "crop_display_label": payload.crop_display_label,
+                "timeline_label": payload.timeline_label,
+                "timeline_days": payload.timeline_days,
+                "radius_km": payload.radius_km,
+                "have_item": BarterItemDto(
+                    normalized_name=payload.have_item.normalized_name,
+                    display_name=payload.have_item.display_name,
+                    category="fertilizer",
+                    quantity=payload.have_item.quantity,
+                    unit=payload.have_item.unit,
+                ),
+                "need_item": BarterItemDto(
+                    normalized_name=payload.need_item.normalized_name,
+                    display_name=payload.need_item.display_name,
+                    category="pesticide",
+                    quantity=payload.need_item.quantity,
+                    unit=payload.need_item.unit,
+                ),
+            },
         )
 
     def get_or_create_matches(self, request_id: str) -> MatchesResponse:
@@ -207,6 +238,16 @@ class FakeFarmerWorkflowService:
                 ),
             ],
             status="draft",
+            published_at=None,
+        )
+
+    def publish_harvest_listing(self, listing_id: str) -> HarvestListingResponse:
+        listing = self.get_harvest_listing(listing_id)
+        return listing.model_copy(
+            update={
+                "status": "published",
+                "published_at": datetime(2026, 3, 31, 12, 15, tzinfo=timezone.utc),
+            },
         )
 
 
@@ -235,6 +276,31 @@ class FarmerApiRouteTests(unittest.TestCase):
         )
         self.assertEqual(intake.status_code, 200)
         request_id = intake.json()["request_id"]
+
+        updated = self.client.patch(
+            f"/api/v1/farmer/intakes/{request_id}",
+            json={
+                "crop_display_label": "Sweet Corn",
+                "timeline_label": "Tomorrow",
+                "timeline_days": 1,
+                "radius_km": 8,
+                "have_item": {
+                    "normalized_name": "nitrogen_fertilizer",
+                    "display_name": "Nitrogen Fertilizer",
+                    "quantity": 4,
+                    "unit": "bag",
+                },
+                "need_item": {
+                    "normalized_name": "organic_pesticide",
+                    "display_name": "Organic Pesticide",
+                    "quantity": 2,
+                    "unit": "liter",
+                },
+            },
+        )
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["crop_display_label"], "Sweet Corn")
+        self.assertEqual(updated.json()["timeline_days"], 1)
 
         matches = self.client.post(f"/api/v1/farmer/intakes/{request_id}/matches")
         self.assertEqual(matches.status_code, 200)
@@ -268,6 +334,11 @@ class FarmerApiRouteTests(unittest.TestCase):
         listing = self.client.get(f"/api/v1/farmer/harvest-listings/{listing_id}")
         self.assertEqual(listing.status_code, 200)
         self.assertEqual(listing.json()["buyer_interest_count"], 2)
+
+        published = self.client.post(f"/api/v1/farmer/harvest-listings/{listing_id}/publish")
+        self.assertEqual(published.status_code, 200)
+        self.assertEqual(published.json()["status"], "published")
+        self.assertIsNotNone(published.json()["published_at"])
 
     def test_missing_request_returns_404(self) -> None:
         response = self.client.get("/api/v1/farmer/intakes/missing-request")

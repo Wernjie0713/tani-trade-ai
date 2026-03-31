@@ -281,6 +281,12 @@ class FarmerAiOrchestrator:
             raw_text=deterministic.raw_text,
             crop_code=crop_code,
             crop_label=crop_label(crop_code),
+            crop_detected=deterministic.crop_detected,
+            crop_display_label=self._resolve_crop_display_label(
+                crop_code=crop_code,
+                deterministic=deterministic,
+                ai_output=ai_output,
+            ),
             timeline_label=timeline_label,
             timeline_days=timeline_days,
             radius_km=radius_km,
@@ -289,6 +295,25 @@ class FarmerAiOrchestrator:
             have_item=have_item,
             need_item=need_item,
         )
+
+    def _resolve_crop_display_label(
+        self,
+        *,
+        crop_code: str,
+        deterministic: ParsedIntake,
+        ai_output: GeminiIntakeExtraction,
+    ) -> str | None:
+        if deterministic.crop_display_label:
+            return deterministic.crop_display_label
+
+        ai_crop_name = (ai_output.crop_name or "").strip()
+        if ai_crop_name and find_crop_code(ai_crop_name) == crop_code:
+            return ai_crop_name
+
+        if deterministic.crop_detected:
+            return crop_label(crop_code)
+
+        return None
 
     def _merge_item(
         self,
