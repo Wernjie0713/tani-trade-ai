@@ -78,12 +78,12 @@ This project is not a normal marketplace with a chatbot layered on top. The AI i
 
 - converting voice or chat into structured farm intent
 - understanding crop context, urgency, and quantities
-- finding barter opportunities with local constraints
+- helping normalize messy farmer language into usable trade signals
 - explaining fair-value trade proposals
 - estimating harvest ranges from grounded data
 - generating buyer-ready advance commitment listings
 
-Without the AI layer, the core workflow breaks down into manual searching and negotiation.
+Without the AI layer, the core workflow breaks down into manual searching and negotiation. At the same time, not every part of the workflow should be delegated to an LLM. The actual barter decision still depends on real inventory, distance, trust, and price references, so the system uses deterministic backend rules for the final ranking and proposal math.
 
 ## Product Modules
 
@@ -118,31 +118,70 @@ Without the AI layer, the core workflow breaks down into manual searching and ne
 - Frontend: React 19, Vite, Tailwind CSS v4, shadcn/ui
 - Backend: FastAPI
 - Database/Auth: Supabase
+- AI integration: Gemini API via backend services
 - Local dev: Node.js + Python virtual environment
 
-### Planned hackathon AI stack
+### Current AI implementation
 
-The concept is designed to align with the Google AI ecosystem requirements of the hackathon:
+The current backend is intentionally split into two layers:
 
-- Gemini 2.0 Flash
-  - fast voice/text parsing
-  - farmer intake and structured extraction
-- Gemini 2.0 Pro
-  - deeper barter reasoning
-  - listing generation and buyer-fit explanation
-- Firebase Genkit or Vertex AI Agent Builder
-  - orchestration of intake, matching, valuation, and projection agents
-- Grounding / RAG layer
-  - pricing data
-  - weather data
-  - crop-cycle references
-  - buyer requirement documents
+- Gemini-backed AI services
+  - farmer intake extraction from natural language
+  - proposal explanation generation
+  - harvest listing copy generation
+- Deterministic backend services
+  - inventory filtering from Supabase
+  - distance calculation
+  - match ranking
+  - fair-value barter ratio math
+  - meeting point selection
+  - harvest projection math
 
-This repository does not yet implement the Google AI layer. It currently provides the product scaffold where those agents will be integrated.
+This is deliberate. The barter engine is currently a structured retrieval and scoring problem more than an unstructured knowledge retrieval problem. A good barter match must respect actual stock, units, radius, trust score, and pricing references. Those are easier to explain, test, and defend in a hackathon demo when they are implemented as deterministic business rules.
 
-## RAG / Grounding Data Sources
+### Why matching is deterministic instead of vector-first
 
-Planned grounding sources for the hackathon demo:
+The current implementation does not use vector search for the core barter match step. That choice is intentional:
+
+- barter matching depends on exact availability, not just semantic similarity
+- quantity, unit, distance, and trust need explicit rule-based scoring
+- fair-value proposals should be explainable and repeatable
+- hackathon demos benefit from deterministic behavior on seeded data
+
+In other words, AI is used where language understanding and generation matter, while deterministic services are used where the system must make auditable trading decisions.
+
+### Small RAG extension points
+
+RAG is still valuable in this product, but as a narrow retrieval layer around the deterministic engine rather than a replacement for it. The most useful next places to apply a small RAG layer are:
+
+- item synonym and alias retrieval
+  - map BM/English/local farming terms like `racun organik`, `ubat serangga`, or `pesticide spray` to normalized inventory items
+- buyer requirement retrieval
+  - match harvest listings against restaurant, grocer, or distributor requirement notes
+- crop and agronomy grounding
+  - retrieve crop-cycle references, planting guides, and localized best-practice notes
+- pricing and market context grounding
+  - retrieve recent pricing references or market notes used to justify barter ratios and listing narratives
+
+This would create a stronger hybrid story for the hackathon:
+
+1. Gemini extracts the farmer's intent.
+2. RAG retrieves relevant synonyms, buyer needs, and domain references.
+3. Deterministic services rank the real barter opportunities.
+4. Gemini explains the result in farmer-friendly language.
+
+## Grounding and Possible RAG Data Sources
+
+Current structured grounding already used by the backend:
+
+- Supabase inventory rows
+- market price references
+- crop profiles
+- meeting points
+- trust scores
+- location and distance metadata
+
+Good candidates for a future small RAG layer:
 
 - fertilizer and commodity pricing references
 - local crop guides and planting-cycle information
@@ -155,19 +194,19 @@ Planned grounding sources for the hackathon demo:
 
 What is already implemented in this repository:
 
-- frontend scaffold with a mobile-first landing/dashboard shell
-- backend FastAPI service with a health endpoint
-- Supabase configuration wiring for frontend and backend
-- local development setup for the fullstack app
+- route-based frontend farmer flow wired to the backend
+- FastAPI farmer workflow endpoints from intake to harvest listing draft
+- Supabase schema, seed data, and seeded demo identities
+- Gemini-backed AI services for intake extraction, proposal explanation, and listing generation
+- deterministic matching, valuation, and projection services
+- local logging for AI request/fallback visibility
 
 What is planned next for the MVP:
 
-- farmer voice/text intake flow
-- structured summary confirmation screen
-- barter match results and proposal generation
-- planting record submission
-- advance harvest commitment listing flow
-- buyer reservation dashboard
+- small RAG layer for synonym retrieval, buyer requirement grounding, and agronomy/price context
+- richer buyer-side workflows and reservation state changes
+- optional voice transcription layer
+- stronger external grounding sources for prices, weather, and buyer demand
 
 ## UX Principles
 
@@ -262,6 +301,7 @@ API_V1_PREFIX=/api/v1
 FRONTEND_URL=http://localhost:5173
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
 ### Frontend
@@ -310,4 +350,4 @@ The biggest risk is scope creep. The strongest demo is one clean barter loop plu
 
 ## AI-Generated Code Disclosure
 
-Portions of this repository scaffold and documentation were created with AI assistance and then reviewed and edited by the team. The current local scaffold was generated with AI-assisted coding support, while the intended product intelligence for the hackathon demo is planned around Google's Gemini ecosystem and grounded retrieval workflows.
+Portions of this repository and documentation were created with AI assistance and then reviewed and edited by the team. The current implementation combines Gemini-backed language understanding and generation with deterministic backend matching and valuation logic. A future extension may add a narrow RAG layer for synonym retrieval, buyer requirement grounding, and external domain references.
