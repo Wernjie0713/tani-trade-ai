@@ -179,3 +179,10 @@ class HarvestListingResponse(BaseModel):
     buyer_previews: list[BuyerPreview]
     status: str
     published_at: datetime | None = None
+
+
+class SpeechTranscriptionResponse(BaseModel):
+    transcript: str
+    language_code: str
+    confidence: float | None = None
+    provider: str = "google_speech_v2"

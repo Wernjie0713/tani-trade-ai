@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
-import { createFarmerIntake } from "@/lib/farmerApi"
+import { createFarmerIntake, transcribeFarmerSpeech } from "@/lib/farmerApi"
 import { ROUTES } from "@/prototype/routes"
 
 const styles = [
@@ -69,6 +69,23 @@ const themeStyle = {
   "--radius-xl": "3rem",
 }
 
+const MAX_RECORDING_MS = 30_000
+const RECORDING_MIME_TYPES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+]
+
+function getSupportedRecordingMimeType() {
+  if (typeof MediaRecorder === "undefined") {
+    return ""
+  }
+
+  return RECORDING_MIME_TYPES.find((mimeType) => (
+    typeof MediaRecorder.isTypeSupported !== "function" || MediaRecorder.isTypeSupported(mimeType)
+  )) || ""
+}
+
 function FarmerVoiceInputPage() {
   const navigate = useNavigate()
   const { bootstrap, bootstrapError, resetFlowIds, updateFlowIds } = useFarmerFlow()
@@ -77,6 +94,12 @@ function FarmerVoiceInputPage() {
     status: "idle",
     error: null,
   })
+  const [voiceState, setVoiceState] = useState("idle")
+  const [voiceError, setVoiceError] = useState(null)
+  const mediaRecorderRef = useRef(null)
+  const mediaStreamRef = useRef(null)
+  const audioChunksRef = useRef([])
+  const stopTimeoutRef = useRef(null)
 
   const promptSuggestions = bootstrap?.quick_prompts?.length
     ? bootstrap.quick_prompts
@@ -85,7 +108,156 @@ function FarmerVoiceInputPage() {
         "I am planting Sweet Corn and I need seedling trays for next week.",
         "I am planting Chili and I have compost tea to trade for bamboo stakes.",
       ]
-  const isSubmitDisabled = submitState.status === "loading" || !draftMessage.trim()
+  const isVoiceSupported = typeof navigator !== "undefined"
+    && typeof MediaRecorder !== "undefined"
+    && Boolean(navigator.mediaDevices?.getUserMedia)
+  const isRecording = voiceState === "recording"
+  const isTranscribing = voiceState === "transcribing"
+  const isSubmitDisabled = submitState.status === "loading"
+    || isRecording
+    || isTranscribing
+    || !draftMessage.trim()
+  const isVoiceButtonDisabled = !isVoiceSupported || submitState.status === "loading" || isTranscribing
+
+  const clearStopTimeout = () => {
+    if (stopTimeoutRef.current !== null) {
+      clearTimeout(stopTimeoutRef.current)
+      stopTimeoutRef.current = null
+    }
+  }
+
+  const stopMediaStream = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      mediaStreamRef.current = null
+    }
+  }
+
+  useEffect(() => (
+    () => {
+      clearStopTimeout()
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop()
+      }
+      stopMediaStream()
+    }
+  ), [])
+
+  async function handleTranscription(audioBlob) {
+    setVoiceState("transcribing")
+    setVoiceError(null)
+
+    try {
+      const response = await transcribeFarmerSpeech(audioBlob)
+      setDraftMessage(response.transcript)
+      setVoiceState("idle")
+    } catch (error) {
+      setVoiceState("error")
+      setVoiceError(error.message || "Unable to transcribe your recording right now.")
+    }
+  }
+
+  async function startRecording() {
+    if (!isVoiceSupported) {
+      return
+    }
+
+    setVoiceError(null)
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mimeType = getSupportedRecordingMimeType()
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream)
+
+      audioChunksRef.current = []
+      mediaStreamRef.current = stream
+      mediaRecorderRef.current = recorder
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onerror = () => {
+        clearStopTimeout()
+        stopMediaStream()
+        setVoiceState("error")
+        setVoiceError("Voice recording failed. You can still type your barter request.")
+      }
+
+      recorder.onstop = () => {
+        clearStopTimeout()
+        stopMediaStream()
+        const recordedBlob = new Blob(
+          audioChunksRef.current,
+          { type: recorder.mimeType || "audio/webm" },
+        )
+        audioChunksRef.current = []
+
+        if (!recordedBlob.size) {
+          setVoiceState("error")
+          setVoiceError("No speech was captured. Try recording again.")
+          return
+        }
+
+        void handleTranscription(recordedBlob)
+      }
+
+      recorder.start()
+      setVoiceState("recording")
+      stopTimeoutRef.current = setTimeout(() => {
+        if (recorder.state === "recording") {
+          recorder.stop()
+        }
+      }, MAX_RECORDING_MS)
+    } catch (error) {
+      stopMediaStream()
+      setVoiceState("error")
+      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+        setVoiceError("Microphone access was denied. You can still type your barter request.")
+        return
+      }
+      setVoiceError("Voice recording isn't available right now. You can still type your barter request.")
+    }
+  }
+
+  function stopRecording() {
+    clearStopTimeout()
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop()
+    }
+  }
+
+  function handleVoiceButtonClick() {
+    if (isVoiceButtonDisabled) {
+      return
+    }
+
+    if (isRecording) {
+      stopRecording()
+      return
+    }
+
+    void startRecording()
+  }
+
+  const voiceStatusLabel = !isVoiceSupported
+    ? "Typed Input Only"
+    : isRecording
+      ? "Recording"
+      : isTranscribing
+        ? "Transcribing"
+        : "Voice Ready"
+  const voicePromptText = !isVoiceSupported
+    ? "Voice capture is not supported here. Type your barter request below."
+    : isRecording
+      ? "Recording now. Tap the mic again to stop."
+      : isTranscribing
+        ? "Transcribing your barter request..."
+        : "Tap the mic to record a barter request."
 
   async function handleSubmit() {
     if (!draftMessage.trim()) {
@@ -129,8 +301,8 @@ function FarmerVoiceInputPage() {
           <section className="mb-8 text-center">
             <h2 className="font-headline font-extrabold text-[32px] leading-tight text-primary tracking-tight mb-3">What's on your mind?</h2>
             <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-              <p className="text-sm font-semibold text-primary font-label uppercase tracking-widest">Listening</p>
+              <div className={`w-2 h-2 rounded-full bg-primary ${isRecording ? "animate-pulse" : ""}`}></div>
+              <p className="text-sm font-semibold text-primary font-label uppercase tracking-widest">{voiceStatusLabel}</p>
             </div>
           </section>
 
@@ -141,14 +313,16 @@ function FarmerVoiceInputPage() {
               </div>
 
               <div className="relative z-10">
-                <div className="absolute -inset-8 bg-primary-container/15 rounded-full blur-2xl animate-pulse"></div>
-                <button className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white shadow-xl relative voice-active active:scale-95 transition-transform duration-150" type="button">
-                  <span className="material-symbols-outlined text-5xl" style={{ fontVariationSettings: "'wght' 500, 'FILL' 1" }}>mic</span>
+                <div className={`absolute -inset-8 rounded-full blur-2xl ${isRecording ? "animate-pulse bg-primary-container/20" : "bg-primary-container/10"}`}></div>
+                <button className={`w-32 h-32 rounded-full flex items-center justify-center text-white shadow-xl relative active:scale-95 transition-transform duration-150 disabled:opacity-60 ${isRecording ? "bg-error voice-active" : "bg-primary"} ${isTranscribing ? "animate-pulse" : ""}`} disabled={isVoiceButtonDisabled} onClick={handleVoiceButtonClick} type="button">
+                  <span className="material-symbols-outlined text-5xl" style={{ fontVariationSettings: "'wght' 500, 'FILL' 1" }}>
+                    {isRecording ? "stop" : "mic"}
+                  </span>
                 </button>
               </div>
 
               <div className="mt-8 text-center relative z-10 px-8">
-                <p className="text-on-surface font-semibold text-lg leading-snug">Speak now to find local trades...</p>
+                <p className="text-on-surface font-semibold text-lg leading-snug">{voicePromptText}</p>
               </div>
             </div>
           </div>
@@ -164,16 +338,16 @@ function FarmerVoiceInputPage() {
 
           <div className="mb-8">
             <div className="relative">
-              <input className="w-full h-14 pl-6 pr-14 rounded-full bg-surface-container-highest/50 border-none focus:ring-2 focus:ring-primary/20 transition-all font-body text-on-surface placeholder:text-on-surface-variant/60" onChange={(event) => setDraftMessage(event.target.value)} placeholder="Type message..." type="text" value={draftMessage} />
+              <input className="w-full h-14 pl-6 pr-14 rounded-full bg-surface-container-highest/50 border-none focus:ring-2 focus:ring-primary/20 transition-all font-body text-on-surface placeholder:text-on-surface-variant/60 disabled:opacity-70" disabled={submitState.status === "loading" || isTranscribing} onChange={(event) => setDraftMessage(event.target.value)} placeholder="Type message..." type="text" value={draftMessage} />
               <button className="absolute right-2 top-2 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container transition-colors shadow-sm disabled:opacity-70" disabled={isSubmitDisabled} onClick={handleSubmit} type="button">
                 <span className="material-symbols-outlined text-xl">arrow_forward</span>
               </button>
             </div>
           </div>
 
-          {(submitState.error || bootstrapError) && (
+          {(voiceError || submitState.error || bootstrapError) && (
             <div className="mb-6 rounded-[1.5rem] border border-error/20 bg-error-container/60 px-5 py-4 text-sm font-medium text-on-error-container">
-              {submitState.error || bootstrapError}
+              {voiceError || submitState.error || bootstrapError}
             </div>
           )}
 

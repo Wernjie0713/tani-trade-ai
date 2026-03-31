@@ -10,8 +10,21 @@ def configure_ai_file_logging(settings: Settings) -> None:
     log_path = settings.ai_log_path
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    ai_logger = logging.getLogger("app.services.ai")
-    file_handler = _get_existing_file_handler(ai_logger, str(log_path))
+    _configure_namespace_logger(
+        logger_name="app.services.ai",
+        log_path=str(log_path),
+        enabled=settings.ai_debug_logging,
+    )
+    _configure_namespace_logger(
+        logger_name="app.services.speech",
+        log_path=str(log_path),
+        enabled=settings.speech_debug_logging,
+    )
+
+
+def _configure_namespace_logger(*, logger_name: str, log_path: str, enabled: bool) -> None:
+    logger = logging.getLogger(logger_name)
+    file_handler = _get_existing_file_handler(logger, log_path)
     if file_handler is None:
         file_handler = RotatingFileHandler(
             log_path,
@@ -22,10 +35,10 @@ def configure_ai_file_logging(settings: Settings) -> None:
         file_handler.setFormatter(
             logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
         )
-        ai_logger.addHandler(file_handler)
+        logger.addHandler(file_handler)
 
-    ai_logger.setLevel(logging.INFO if settings.ai_debug_logging else logging.WARNING)
-    ai_logger.propagate = True
+    logger.setLevel(logging.INFO if enabled else logging.WARNING)
+    logger.propagate = True
 
 
 def _get_existing_file_handler(logger: logging.Logger, filename: str) -> RotatingFileHandler | None:

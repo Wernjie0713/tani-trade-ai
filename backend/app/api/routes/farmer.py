@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from app.api.deps import get_farmer_workflow_service
+from app.api.deps import get_farmer_workflow_service, get_speech_transcription_service
 from app.schemas.farmer_flow import (
     HarvestListingResponse,
     IntakeCreateRequest,
@@ -9,11 +9,31 @@ from app.schemas.farmer_flow import (
     MatchesResponse,
     PlantingCreateRequest,
     ProposalResponse,
+    SpeechTranscriptionResponse,
     TradeResponse,
 )
 from app.services.farmer_flow import FarmerWorkflowService
+from app.services.speech import SpeechTranscriptionService, SpeechTranscriptionServiceError
 
 router = APIRouter(prefix="/farmer", tags=["farmer"])
+
+
+@router.post("/speech/transcriptions", response_model=SpeechTranscriptionResponse)
+async def transcribe_speech(
+    audio: UploadFile = File(...),
+    service: SpeechTranscriptionService = Depends(get_speech_transcription_service),
+) -> SpeechTranscriptionResponse:
+    try:
+        audio_bytes = await audio.read()
+        if not audio_bytes:
+            raise HTTPException(status_code=400, detail="Audio file is empty.")
+        return service.transcribe_audio(
+            audio_bytes,
+            filename=audio.filename,
+            content_type=audio.content_type,
+        )
+    except SpeechTranscriptionServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.post("/intakes", response_model=IntakeSummaryResponse)

@@ -13,6 +13,16 @@ export function createFarmerIntake(rawText) {
   })
 }
 
+export function transcribeFarmerSpeech(audioBlob, filename = "farmer-voice.webm") {
+  const formData = new FormData()
+  formData.append("audio", audioBlob, filename)
+
+  return apiRequest("/farmer/speech/transcriptions", {
+    method: "POST",
+    body: formData,
+  })
+}
+
 export function getFarmerIntake(requestId) {
   return apiRequest(`/farmer/intakes/${requestId}`)
 }

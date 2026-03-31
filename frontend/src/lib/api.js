@@ -13,8 +13,9 @@ export class ApiError extends Error {
 
 export async function apiRequest(path, options = {}) {
   const url = `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
   }
 
