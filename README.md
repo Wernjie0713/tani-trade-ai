@@ -2,7 +2,7 @@
 
 TaniTrade AI is a hackathon project for Malaysian smallholder farmers. It is an agentic agrotech platform that helps farmers barter surplus farm inputs for missing resources, then turn projected harvest into advance buyer commitments to unlock working capital before harvest.
 
-This repository currently contains a working MVP scaffold:
+This repository currently contains a working MVP:
 
 - `frontend/`: React + Vite + Tailwind CSS v4 + shadcn/ui
 - `backend/`: FastAPI
@@ -119,6 +119,7 @@ Without the AI layer, the core workflow breaks down into manual searching and ne
 - Backend: FastAPI
 - Database: Firebase Firestore via Firebase Admin SDK
 - AI integration: Gemini API via backend services
+- Voice transcription: Google Cloud Speech-to-Text V2
 - Local dev: Node.js + Python virtual environment
 
 ### Current AI implementation
@@ -194,12 +195,15 @@ Good candidates for a future small RAG layer:
 
 What is already implemented in this repository:
 
-- route-based frontend farmer flow wired to the backend
-- FastAPI farmer workflow endpoints from intake to harvest listing draft
+- separated farmer and buyer route flows
+- working farmer flow from intake to published harvest listing
+- inline parsed-summary editing with backend persistence
 - Firebase seed data and seeded demo identities
 - Gemini-backed AI services for intake extraction, proposal explanation, and listing generation
+- Google Speech-to-Text voice input for farmer intake
 - deterministic matching, valuation, and projection services
-- local logging for AI request/fallback visibility
+- publish flow for harvest listings
+- local logging for AI and speech request/fallback visibility
 
 This should be presented as a working MVP rather than a static prototype. New farmer actions are processed live through the backend and persisted in Firebase, while counterparty supply and buyer interest remain seeded to keep the hackathon demo reliable.
 
@@ -207,7 +211,6 @@ What is planned next for the MVP:
 
 - small RAG layer for synonym retrieval, buyer requirement grounding, and agronomy/price context
 - richer buyer-side workflows and reservation state changes
-- optional voice transcription layer
 - stronger external grounding sources for prices, weather, and buyer demand
 
 ## UX Principles
@@ -253,74 +256,9 @@ frontend/
   package.json
 ```
 
-## Local Setup
+## Quick Setup
 
-### Prerequisites
-
-- Node.js 22+
-- Python 3.11+
-- a Firebase project with Firestore enabled
-
-### Environment files
-
-```powershell
-Copy-Item backend\.env.example backend\.env
-Copy-Item frontend\.env.example frontend\.env
-```
-
-Place your Firebase service account JSON file in `backend/service-account.json`, or set `FIREBASE_SERVICE_ACCOUNT_JSON` directly in `backend/.env`.
-
-### Backend setup
-
-```powershell
-python -m venv backend\.venv
-backend\.venv\Scripts\Activate.ps1
-pip install -r backend\requirements.txt
-python backend\scripts\seed_firestore.py
-uvicorn app.main:app --reload --app-dir backend --port 8010
-```
-
-Backend URLs:
-
-- API: `http://localhost:8010`
-- Docs: `http://localhost:8010/docs`
-- Health: `http://localhost:8010/api/v1/health`
-
-### Frontend setup
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend URL:
-
-- App: `http://localhost:5173`
-
-## Environment Variables
-
-### Backend
-
-`backend/.env`
-
-```env
-APP_NAME=TaniTrade AI API
-API_V1_PREFIX=/api/v1
-FRONTEND_URL=http://localhost:5173
-FIREBASE_PROJECT_ID=your-firebase-project-id
-FIREBASE_CREDENTIALS_PATH=service-account.json
-FIREBASE_SERVICE_ACCOUNT_JSON=
-GEMINI_API_KEY=your-gemini-api-key
-```
-
-### Frontend
-
-`frontend/.env`
-
-```env
-VITE_API_BASE_URL=http://localhost:8010/api/v1
-```
+For local onboarding, environment setup, Firestore seeding, Speech-to-Text enablement, and smoke-test steps, see [QUICK_SETUP.md](./QUICK_SETUP.md).
 
 ## Demo Narrative
 
