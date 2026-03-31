@@ -129,6 +129,7 @@ class TradeResponse(BaseModel):
     request_id: str
     transaction_code: str
     counterparty_name: str
+    counterparty_avatar_url: str | None = None
     trade_status: str
     offer_item_name: str
     offer_quantity: float

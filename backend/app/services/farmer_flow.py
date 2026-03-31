@@ -923,6 +923,7 @@ class FarmerWorkflowService:
             request_id=trade_row["request_id"],
             transaction_code=trade_row["transaction_code"],
             counterparty_name=snapshot.get("counterparty_name", "Unknown Farmer"),
+            counterparty_avatar_url=snapshot.get("counterparty_avatar_url"),
             trade_status=trade_row["status"],
             offer_item_name=snapshot.get("offer_item_name", ""),
             offer_quantity=float(snapshot.get("offer_quantity", 0)),

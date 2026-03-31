@@ -85,6 +85,7 @@ function FarmerVoiceInputPage() {
         "I am planting Sweet Corn and I need seedling trays for next week.",
         "I am planting Chili and I have compost tea to trade for bamboo stakes.",
       ]
+  const isSubmitDisabled = submitState.status === "loading" || !draftMessage.trim()
 
   async function handleSubmit() {
     if (!draftMessage.trim()) {
@@ -164,7 +165,7 @@ function FarmerVoiceInputPage() {
           <div className="mb-8">
             <div className="relative">
               <input className="w-full h-14 pl-6 pr-14 rounded-full bg-surface-container-highest/50 border-none focus:ring-2 focus:ring-primary/20 transition-all font-body text-on-surface placeholder:text-on-surface-variant/60" onChange={(event) => setDraftMessage(event.target.value)} placeholder="Type message..." type="text" value={draftMessage} />
-              <button className="absolute right-2 top-2 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container transition-colors shadow-sm disabled:opacity-70" disabled={submitState.status === "loading"} onClick={handleSubmit} type="button">
+              <button className="absolute right-2 top-2 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container transition-colors shadow-sm disabled:opacity-70" disabled={isSubmitDisabled} onClick={handleSubmit} type="button">
                 <span className="material-symbols-outlined text-xl">arrow_forward</span>
               </button>
             </div>
@@ -186,7 +187,7 @@ function FarmerVoiceInputPage() {
             </div>
           </section>
 
-          <button className="w-full bg-primary text-white py-5 rounded-full font-headline font-extrabold text-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-70" disabled={submitState.status === "loading"} onClick={handleSubmit} type="button">
+          <button className="w-full bg-primary text-white py-5 rounded-full font-headline font-extrabold text-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-70" disabled={isSubmitDisabled} onClick={handleSubmit} type="button">
             <span>{submitState.status === "loading" ? "Analyzing Request..." : "Analyze & Find Match"}</span>
             <span className="material-symbols-outlined group-hover:rotate-12 transition-transform" style={{ fontVariationSettings: "'FILL' 1" }}>temp_preferences_custom</span>
           </button>

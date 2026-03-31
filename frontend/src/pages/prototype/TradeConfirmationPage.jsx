@@ -5,7 +5,7 @@ import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { getFarmerTrade } from "@/lib/farmerApi"
-import { formatDateTime, formatQuantity } from "@/lib/farmerFlow"
+import { fallbackAvatar, formatDateTime, formatQuantity } from "@/lib/farmerFlow"
 import { ROUTES } from "@/prototype/routes"
 
 const styles = [
@@ -139,23 +139,41 @@ function TradeConfirmationPage() {
         headerTitle="Trade Confirmed"
       >
         <main className="max-w-md mx-auto flex min-h-[calc(100dvh-5.5rem)] flex-col px-6 pt-10 pb-36">
-          <div className="flex flex-col items-center text-center space-y-6 mb-8">
-            <div className="relative w-full aspect-[4/3] max-w-[320px]">
-              <div className="absolute inset-0 bg-primary/10 blur-[60px] opacity-40 rounded-full animate-pulse-soft"></div>
-              <div className="relative z-10 w-full h-full rounded-full overflow-hidden shadow-2xl border-4 border-white">
-                <img alt="Sustainable agriculture handshake" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzhSnFNsVmDvhN2g79gOR7FNLdJkXC5JQ6KNpJkcAkdudGdzfjP_iXect3QIxuqz7Xk56w1eKJukgKr-YDU-C9WWUNtmlatux7Aeb1fqrlPWwAwQGAEzox1tgSmgDhazP9VIN40L85cqAJbySRqlD8HXigTdNjCyOuIf0qrx_sl81svqtEkofEpr1z1UWZr1h4NN4l756h3MEh4Fwhijs6xip-d2syouMXx3v6b1wkD9jG6Ggody-PfGbYPaVPrNQ8bqEDPYjrKFY" />
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-tertiary-fixed text-on-tertiary-fixed px-4 py-2 rounded-full flex items-center gap-2 shadow-xl backdrop-blur-md">
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                  <span className="font-label text-[11px] font-extrabold uppercase tracking-widest">Trade Secured</span>
+          <div className="mb-8 rounded-[2.75rem] border border-primary/10 bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-surface-container px-6 py-8 shadow-xl shadow-primary/10">
+            <div className="flex flex-col items-center text-center">
+              <div className="relative flex h-40 w-40 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-primary/12 blur-2xl"></div>
+                <div className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-primary shadow-[0_26px_52px_-22px_rgba(51,79,43,0.75)] ring-4 ring-white">
+                  <svg
+                    aria-hidden="true"
+                    className="h-20 w-20 drop-shadow-[8px_8px_0_rgba(0,0,0,0.12)]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M5.5 12.5L10 17l8.5-9"
+                      stroke="white"
+                      strokeLinecap="square"
+                      strokeLinejoin="miter"
+                      strokeWidth="4"
+                    />
+                  </svg>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <h1 className="font-headline font-extrabold text-4xl tracking-tight text-primary">Success!</h1>
-              <p className="text-on-surface-variant text-sm px-6 leading-relaxed">
-                {trade ? `Your barter with ${trade.counterparty_name} is complete. Your farm is ready for the next phase.` : "Finalizing your barter and preparing the next farming step."}
-              </p>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-tertiary-fixed px-4 py-2 text-on-tertiary-fixed shadow-lg">
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  verified
+                </span>
+                <span className="font-label text-[11px] font-extrabold uppercase tracking-widest">Trade Secured</span>
+              </div>
+
+              <div className="mt-5 space-y-2">
+                <h1 className="font-headline text-4xl font-extrabold tracking-tight text-primary">Success!</h1>
+                <p className="px-4 text-sm leading-relaxed text-on-surface-variant">
+                  {trade ? `Your barter with ${trade.counterparty_name} is complete. Your farm is ready for the next phase.` : "Finalizing your barter and preparing the next farming step."}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -208,7 +226,7 @@ function TradeConfirmationPage() {
                 <div className="space-y-5">
                   <div className="bg-surface-container-lowest p-4 rounded-full flex items-center gap-4 border border-outline-variant/10 shadow-sm">
                     <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
-                      <img alt={trade.counterparty_name} className="w-full h-full object-cover" src={`https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(trade.counterparty_name)}`} />
+                      <img alt={trade.counterparty_name} className="w-full h-full object-cover" src={trade.counterparty_avatar_url || fallbackAvatar(trade.counterparty_name)} />
                     </div>
                     <div>
                       <p className="font-label text-[9px] text-outline uppercase font-black tracking-widest">Trading Partner</p>

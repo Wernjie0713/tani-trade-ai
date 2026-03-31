@@ -98,6 +98,16 @@ function RecordPlantingPage() {
     error: null,
   })
 
+  const plantingDate = normalizePlantingDate(form.plantingDate)
+  const areaValue = Number(form.areaValue)
+  const hasValidArea = Number.isFinite(areaValue) && areaValue > 0
+  const isFormComplete = Boolean(
+    form.cropType.trim() &&
+    plantingDate &&
+    hasValidArea &&
+    form.inputSummary.trim(),
+  )
+
   if (!flowIds.tradeId) {
     return <Navigate replace to={ROUTES.FARMER_TRADE_CONFIRMATION} />
   }
@@ -125,10 +135,6 @@ function RecordPlantingPage() {
 
   async function handleSubmit(event) {
     event.preventDefault()
-
-    const plantingDate = normalizePlantingDate(form.plantingDate)
-    const areaValue = Number(form.areaValue)
-    const hasValidArea = Number.isFinite(areaValue) && areaValue > 0
 
     if (!form.cropType.trim() || !plantingDate || !hasValidArea || !form.inputSummary.trim()) {
       setSubmitState({
@@ -321,7 +327,7 @@ function RecordPlantingPage() {
             </div>
 
             <div className="pt-8">
-              <button className="w-full bg-primary text-on-primary font-headline text-lg font-extrabold py-5 rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-70" disabled={submitState.status === "loading"} type="submit">
+              <button className="w-full bg-primary text-on-primary font-headline text-lg font-extrabold py-5 rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-70 disabled:shadow-none disabled:hover:shadow-none" disabled={submitState.status === "loading" || !isFormComplete} type="submit">
                 <span>{submitState.status === "loading" ? "Generating Listing..." : "Generate Harvest Listing"}</span>
                 <span className="material-symbols-outlined transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
               </button>

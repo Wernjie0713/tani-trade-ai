@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 
 import BuyerShell from "@/components/BuyerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
-import { fallbackAvatar, formatConfidence, formatNumber } from "@/lib/farmerFlow"
+import { formatConfidence, formatNumber } from "@/lib/farmerFlow"
 import { ROUTES } from "@/prototype/routes"
 
 const styles = [
@@ -79,6 +79,7 @@ const seededListing = {
   listingNote:
     "Projected local paddy supply with strong field readiness, tracked inputs, and a reliable handover window for hospitality and grocer demand.",
   farmerName: "Pak Karim",
+  farmerAvatarUrl: "https://api.dicebear.com/9.x/lorelei/svg?seed=PakKarim",
   buyerInterestCount: 6,
   soilVitalityLabel: "Balanced Organic Inputs",
   yieldProbabilityLabel: "High Readiness",
@@ -205,7 +206,7 @@ function FutureSupplyReadinessPage() {
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30">
                     <img
                       alt={seededListing.farmerName}
-                      src={fallbackAvatar(seededListing.farmerName)}
+                      src={seededListing.farmerAvatarUrl}
                     />
                   </div>
                   <div>

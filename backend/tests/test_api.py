@@ -186,6 +186,7 @@ class FakeFarmerWorkflowService:
             request_id=REQUEST_ID,
             transaction_code="TRD-ABCDE123",
             counterparty_name="Pak Abu",
+            counterparty_avatar_url="https://api.dicebear.com/9.x/lorelei/svg?seed=PakAbu",
             trade_status="accepted",
             offer_item_name="Nitrogen Fertilizer",
             offer_quantity=5,

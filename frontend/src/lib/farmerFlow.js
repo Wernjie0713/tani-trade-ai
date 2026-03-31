@@ -119,6 +119,6 @@ export function defaultHarvestImage(cropCode) {
   return "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80"
 }
 
-export function fallbackAvatar(name = "Farmer") {
-  return `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(name)}`
+export function fallbackAvatar() {
+  return "https://api.dicebear.com/9.x/lorelei/svg?seed=TaniTradeFallback"
 }

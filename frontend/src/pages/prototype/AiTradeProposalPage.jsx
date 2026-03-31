@@ -287,7 +287,7 @@ function AiTradeProposalPage() {
 
                     <div className="bg-surface-container-low rounded-3xl p-4 flex items-center gap-4 border border-outline-variant/30">
                       <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-outline-variant/50">
-                        <img alt="Meeting Location" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbfU0ilybtE_TsNQDtT818Dj0T11F-ZFUm5CBQgqgGhlrp9wAlPgpd51-bddGyTZrROG_otFCspx9xwgfEAfYnU79LZorXIEzlGTOgLk5Fi00cVnbsJk48f1MJakwXSWDoKrWfgTGxMy0wuugmC_WhNLULJIMyxOjhBZO_gkjhkHw3Pi-S_ZFHRAIGo9Jyp5_MJuhZ56YVCYdMmtjaqeXX7H1u54if-HnhJ7A-YfR8TT_HEDxj1AgzSCNXJ0Unrh5rnOlr6oZCm8Y" />
+                        <img alt="Kampung handover point" className="w-full h-full object-cover" src="https://upload.wikimedia.org/wikipedia/commons/1/1d/Kampung_in_Kuala_Kedah.jpg" />
                       </div>
                       <div className="flex-1">
                         <h4 className="text-[10px] font-bold text-on-surface-variant/70 uppercase tracking-widest">Handover Point</h4>
