@@ -145,8 +145,9 @@ function RecordPlantingPage() {
     >
       <FarmerShell
         activeNav="harvest"
-        backTo={ROUTES.FARMER_TRADE_CONFIRMATION}
+        backFallbackTo={ROUTES.FARMER_TRADE_CONFIRMATION}
         headerTitle="Planting Record"
+        useHistoryBack
       >
         <main className="max-w-md mx-auto px-6 pt-4 pb-32">
           <section className="mb-10">

@@ -140,7 +140,6 @@ function FarmerFutureSupplyReadinessPage() {
     >
       <FarmerShell
         activeNav="harvest"
-        backTo={ROUTES.FARMER_RECORD_PLANTING}
         containerClassName="max-w-2xl"
         headerTitle="Harvest Listing"
       >

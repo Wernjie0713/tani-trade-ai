@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { ROUTES } from "@/prototype/routes"
@@ -12,11 +12,14 @@ function navClasses(isActive) {
 function FarmerShell({
   activeNav = "barter",
   backTo = null,
+  backFallbackTo = null,
+  useHistoryBack = false,
   children,
   containerClassName = "max-w-md",
   headerTitle,
 }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { flowIds } = useFarmerFlow()
 
   const harvestRoute = flowIds.harvestListingId
@@ -25,6 +28,26 @@ function FarmerShell({
       ? ROUTES.FARMER_RECORD_PLANTING
       : ROUTES.FARMER_VOICE_INPUT
 
+  const hasBackAction = useHistoryBack || Boolean(backTo)
+
+  function handleBack() {
+    if (useHistoryBack) {
+      if (location.key !== "default" && window.history.length > 1) {
+        navigate(-1)
+        return
+      }
+
+      if (backFallbackTo) {
+        navigate(backFallbackTo)
+      }
+      return
+    }
+
+    if (backTo) {
+      navigate(backTo)
+    }
+  }
+
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-primary/10 bg-background/85 backdrop-blur-xl">
@@ -32,11 +55,11 @@ function FarmerShell({
           className={`mx-auto flex w-full items-center justify-between gap-4 px-6 py-4 ${containerClassName}`}
         >
           <div className="flex min-w-0 items-center gap-3">
-            {backTo ? (
+            {hasBackAction ? (
               <button
                 aria-label="Go back"
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-low text-primary transition-colors hover:bg-surface-container"
-                onClick={() => navigate(backTo)}
+                onClick={handleBack}
                 type="button"
               >
                 <span className="material-symbols-outlined">arrow_back</span>
@@ -54,7 +77,7 @@ function FarmerShell({
 
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary/60">
-                {backTo ? "Farmer Flow" : "TaniTrade AI"}
+                {hasBackAction ? "Farmer Flow" : "TaniTrade AI"}
               </p>
               <h1 className="truncate font-headline text-lg font-extrabold tracking-tight text-primary">
                 {headerTitle}
