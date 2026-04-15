@@ -1,17 +1,37 @@
-import AiTradeProposalPage from "@/pages/prototype/AiTradeProposalPage"
-import BuyerMarketplacePage from "@/pages/prototype/BuyerMarketplacePage"
-import FarmerVoiceInputPage from "@/pages/prototype/FarmerVoiceInputPage"
-import FarmerFutureSupplyReadinessPage from "@/pages/prototype/FarmerFutureSupplyReadinessPage"
-import FarmerListingPublishedPage from "@/pages/prototype/FarmerListingPublishedPage"
-import FutureSupplyReadinessPage from "@/pages/prototype/FutureSupplyReadinessPage"
-import LandingRoleSelectionPage from "@/pages/prototype/LandingRoleSelectionPage"
-import NearbyBarterMatchesPage from "@/pages/prototype/NearbyBarterMatchesPage"
-import ParsedAiSummaryPage from "@/pages/prototype/ParsedAiSummaryPage"
-import RecordPlantingPage from "@/pages/prototype/RecordPlantingPage"
-import ReservationConfirmedPage from "@/pages/prototype/ReservationConfirmedPage"
-import TradeConfirmationPage from "@/pages/prototype/TradeConfirmationPage"
+
+import FarmerHarvestListingPage from "@/pages/prototype/FarmerHarvestListingPage";
+import BuyerRequirementPage from "@/pages/prototype/BuyerRequirementPage";
+import LandingRoleSelectionPage from "@/pages/prototype/LandingRoleSelectionPage";
+
+import FarmerVoiceInputPage from "@/pages/prototype/FarmerVoiceInputPage";
+
+import ParsedAiSummaryPage from "@/pages/prototype/ParsedAiSummaryPage";
+
+import NearbyBarterMatchesPage from "@/pages/prototype/NearbyBarterMatchesPage";
+
+import AiTradeProposalPage from "@/pages/prototype/AiTradeProposalPage";
+
+import TradeConfirmationPage from "@/pages/prototype/TradeConfirmationPage";
+
+import RecordPlantingPage from "@/pages/prototype/RecordPlantingPage";
+
+import FarmerFutureSupplyReadinessPage from "@/pages/prototype/FarmerFutureSupplyReadinessPage";
+
+import FarmerListingPublishedPage from "@/pages/prototype/FarmerListingPublishedPage";
+
+import BuyerMarketplacePage from "@/pages/prototype/BuyerMarketplacePage";
+import FutureSupplyReadinessPage from "@/pages/prototype/FutureSupplyReadinessPage";
+import ReservationConfirmedPage from "@/pages/prototype/ReservationConfirmedPage";
+import BuyerReservationsPage from "@/pages/prototype/BuyerReservationsPage";
 
 export const prototypePages = [
+  {
+    path: "/farmer/harvest-listing",
+    group: "Farmer Flow",
+    label: "Farmer harvest listing",
+    description: "Farmer-side harvest listing with AI notes and voice input.",
+    component: FarmerHarvestListingPage,
+  },
   {
     path: "/",
     group: "Entry",
@@ -83,6 +103,13 @@ export const prototypePages = [
     component: BuyerMarketplacePage,
   },
   {
+    path: "/buyer/requirement",
+    group: "Buyer Flow",
+    label: "Buyer requirement",
+    description: "Buyer requirement posting form.",
+    component: BuyerRequirementPage,
+  },
+  {
     path: "/buyer/future-supply-readiness",
     group: "Buyer Flow",
     label: "Buyer supply review",
@@ -95,5 +122,12 @@ export const prototypePages = [
     label: "Reservation confirmed",
     description: "Buyer reservation completion screen.",
     component: ReservationConfirmedPage,
+  },
+  {
+    path: "/buyer/reservations",
+    group: "Buyer Flow",
+    label: "Buyer reservations",
+    description: "Buyer reservations list screen.",
+    component: BuyerReservationsPage,
   },
 ]

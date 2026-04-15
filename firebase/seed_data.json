@@ -550,8 +550,54 @@
       },
       "created_at": "2026-03-05T00:07:00+00:00",
       "updated_at": "2026-03-05T00:07:00+00:00"
+    },
+    {
+      "id": "30000000-0000-0000-0000-000000000009",
+      "planting_record_id": null,
+      "farmer_profile_id": "33333333-3333-3333-3333-333333333333",
+      "crop_code": "sweet_corn",
+      "crop_label": "Sweet Corn",
+      "listing_title": "Sweet Corn Forward Contract",
+      "estimated_yield_min_kg": 3000,
+      "estimated_yield_max_kg": 4000,
+      "harvest_window_start": "2026-06-01",
+      "harvest_window_end": "2026-06-15",
+      "quality_band": "Grade A",
+      "confidence_score": 90.2,
+      "reservation_discount_pct": 5,
+      "early_incentive_label": "5% off for early buyers",
+      "listing_note": "Seeded sweet corn listing for demo.",
+      "status": "projected",
+      "snapshot": {
+        "soil_vitality_label": "Good",
+        "yield_probability_label": "Grade A"
+      },
+      "created_at": "2026-03-10T00:07:00+00:00",
+      "updated_at": "2026-03-10T00:07:00+00:00"
     }
   ],
+    "buyer_requirements": [
+      {
+        "id": "40000000-0000-0000-0000-000000000001",
+        "buyer_id": "55555555-5555-5555-5555-555555555555",
+        "crop": "paddy",
+        "quantity_kg": 5000,
+        "required_by": "2026-05-01",
+        "status": "OPEN",
+        "created_at": "2026-03-12T00:00:00+00:00",
+        "updated_at": "2026-03-12T00:00:00+00:00"
+      },
+      {
+        "id": "40000000-0000-0000-0000-000000000002",
+        "buyer_id": "66666666-6666-6666-6666-666666666666",
+        "crop": "sweet_corn",
+        "quantity_kg": 2000,
+        "required_by": "2026-06-10",
+        "status": "OPEN",
+        "created_at": "2026-03-12T00:00:00+00:00",
+        "updated_at": "2026-03-12T00:00:00+00:00"
+      }
+    ],
   "listing_buyer_interests": [
     {
       "id": "30000000-0000-0000-0000-000000000007",

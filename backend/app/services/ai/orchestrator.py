@@ -10,18 +10,14 @@ from app.services.ai.grounding import (
     build_listing_grounding,
     build_proposal_grounding,
 )
-from app.services.ai.prompts import (
-    INTAKE_PROMPT_VERSION,
-    LISTING_PROMPT_VERSION,
-    PROPOSAL_PROMPT_VERSION,
-    build_intake_system_prompt,
-    build_intake_user_prompt,
-    build_listing_system_prompt,
-    build_listing_user_prompt,
-    build_proposal_system_prompt,
-    build_proposal_user_prompt,
+from app.ai.prompts.harvest_prompts import (
+    PROMPT_HARVEST_LISTING_GENERATION,
+    PROMPT_YIELD_ESTIMATION,
+    PROMPT_LISTING_DESCRIPTION_BM,
+    PROMPT_LISTING_DESCRIPTION_EN,
 )
 from app.services.ai.schemas import GeminiBarterItemExtraction, GeminiIntakeExtraction
+from app.services.ai.prompts import LISTING_PROMPT_VERSION, INTAKE_PROMPT_VERSION, PROPOSAL_PROMPT_VERSION, build_intake_system_prompt, build_intake_user_prompt, build_proposal_system_prompt, build_proposal_user_prompt
 from app.services.catalog import (
     UNIT_ALIASES,
     crop_label,
@@ -201,6 +197,7 @@ class FarmerAiOrchestrator:
         fallback_listing_note: str,
         fallback_soil_vitality_label: str,
         fallback_yield_probability_label: str,
+        language: str = "en",
     ) -> ListingCopyResult:
         if self.client is None:
             return self._fallback_listing(
@@ -209,21 +206,28 @@ class FarmerAiOrchestrator:
             )
 
         try:
+            # Use dual-language prompt
+            if language == "bm":
+                user_prompt = PROMPT_LISTING_DESCRIPTION_BM.format(
+                    crop=listing_payload.get("crop", ""),
+                    area=listing_payload.get("area", ""),
+                    planting_date=listing_payload.get("planting_date", ""),
+                    expected_harvest_date=listing_payload.get("expected_harvest_date", ""),
+                    expected_yield_kg=listing_payload.get("expected_yield_kg", "")
+                )
+            else:
+                user_prompt = PROMPT_LISTING_DESCRIPTION_EN.format(
+                    crop=listing_payload.get("crop", ""),
+                    area=listing_payload.get("area", ""),
+                    planting_date=listing_payload.get("planting_date", ""),
+                    expected_harvest_date=listing_payload.get("expected_harvest_date", ""),
+                    expected_yield_kg=listing_payload.get("expected_yield_kg", "")
+                )
             result = self.client.generate_text(
                 operation="listing",
                 model=self.listing_model,
-                system_instruction=build_listing_system_prompt(),
-                user_prompt=build_listing_user_prompt(
-                    build_listing_grounding(
-                        crop_profile=crop_profile,
-                        planting_row=planting_row,
-                        listing_payload=listing_payload,
-                        fallback_listing_title=fallback_listing_title,
-                        fallback_listing_note=fallback_listing_note,
-                        fallback_soil_vitality_label=fallback_soil_vitality_label,
-                        fallback_yield_probability_label=fallback_yield_probability_label,
-                    ),
-                ),
+                system_instruction="Generate a concise harvest listing note.",
+                user_prompt=user_prompt,
                 temperature=0.4,
                 max_output_tokens=320,
             )
@@ -233,14 +237,14 @@ class FarmerAiOrchestrator:
             self._log_success(
                 "listing",
                 result.model_name,
-                LISTING_PROMPT_VERSION,
-                f"crop={crop_profile['crop_code']} note_generated=true",
+                "HARVEST_LISTING_V1",
+                f"crop={crop_profile.get('crop_code', '')} note_generated=true",
             )
             return ListingCopyResult(
                 listing_note=listing_note,
                 metadata=AiGenerationMetadata(
                     model_name=result.model_name,
-                    prompt_version=LISTING_PROMPT_VERSION,
+                    prompt_version="HARVEST_LISTING_V1",
                     fallback_used=False,
                 ),
             )

@@ -1,15 +1,15 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Navigate, useNavigate } from "react-router-dom"
 
 import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
-import { createOrUpdatePlanting } from "@/lib/farmerApi"
+import { createOrUpdatePlanting, transcribeFarmerSpeech } from "@/lib/farmerApi"
 import { normalizePlantingDate } from "@/lib/farmerFlow"
 import { ROUTES } from "@/prototype/routes"
 
 const styles = [
-  "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        -webkit-tap-highlight-color: transparent;\n      }\n      .glass-card {\n        background: rgba(255, 255, 255, 0.7);\n        backdrop-filter: blur(20px);\n        -webkit-backdrop-filter: blur(20px);\n      }\n      .shimmer-bg {\n        background: linear-gradient(90deg, rgba(74, 103, 65, 0.05) 25%, rgba(74, 103, 65, 0.1) 50%, rgba(74, 103, 65, 0.05) 75%);\n        background-size: 200% 100%;\n        animation: shimmer 3s infinite linear;\n      }\n      @keyframes shimmer {\n        0% { background-position: 200% 0; }\n        100% { background-position: -200% 0; }\n      }\n      .premium-input-ring {\n        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n      }\n      .premium-input-ring:focus-within {\n        border-color: rgba(74, 103, 65, 0.38);\n        box-shadow: 0 0 0 2px #4A6741, 0 0 0 5px rgba(74, 103, 65, 0.08);\n      }\n    ",
+  "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        -webkit-tap-highlight-color: transparent;\n      }\n      .glass-card {\n        background: rgba(255, 255, 255, 0.7);\n        backdrop-filter: blur(20px);\n        -webkit-backdrop-filter: blur(20px);\n      }\n      .shimmer-bg {\n        background: linear-gradient(90deg, rgba(74, 103, 65, 0.05) 25%, rgba(74, 103, 65, 0.1) 50%, rgba(74, 103, 65, 0.05) 75%);\n        background-size: 200% 100%;\n        animation: shimmer 3s infinite linear;\n      }\n      @keyframes shimmer {\n        0% { background-position: 200% 0; }\n        100% { background-position: -200% 0; }\n      }\n      .premium-input-ring {\n        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n      }\n      .premium-input-ring:focus-within {\n        border-color: rgba(74, 103, 65, 0.38);\n        box-shadow: 0 0 0 2px #4A6741, 0 0 0 5px rgba(74, 103, 65, 0.08);\n      }\n      .voice-active {\n        animation: ripple 2s cubic-bezier(0, 0, 0.2, 1) infinite;\n      }\n    ",
 ]
 
 const themeStyle = {
@@ -69,6 +69,23 @@ const themeStyle = {
   "--radius-xl": "3rem",
 }
 
+const MAX_RECORDING_MS = 30_000
+const RECORDING_MIME_TYPES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+]
+
+function getSupportedRecordingMimeType() {
+  if (typeof MediaRecorder === "undefined") {
+    return ""
+  }
+
+  return RECORDING_MIME_TYPES.find((mimeType) => (
+    typeof MediaRecorder.isTypeSupported !== "function" || MediaRecorder.isTypeSupported(mimeType)
+  )) || ""
+}
+
 const AREA_UNIT_OPTIONS = [
   { label: "hectares", value: "hectares" },
   { label: "acres", value: "acres" },
@@ -98,12 +115,186 @@ function RecordPlantingPage() {
     error: null,
   })
 
-  const plantingDate = normalizePlantingDate(form.plantingDate)
-  const areaValue = Number(form.areaValue)
-  const hasValidArea = Number.isFinite(areaValue) && areaValue > 0
+  // Voice states
+  const [voiceState, setVoiceState] = useState("idle")
+  const [voiceError, setVoiceError] = useState(null)
+  const mediaRecorderRef = useRef(null)
+  const mediaStreamRef = useRef(null)
+  const audioChunksRef = useRef([])
+  const stopTimeoutRef = useRef(null)
+
+  const isVoiceSupported = typeof navigator !== "undefined"
+    && typeof MediaRecorder !== "undefined"
+    && Boolean(navigator.mediaDevices?.getUserMedia)
+  const isRecording = voiceState === "recording"
+  const isTranscribing = voiceState === "transcribing"
+  const isVoiceButtonDisabled = !isVoiceSupported || submitState.status === "loading" || isTranscribing
+
+  const clearStopTimeout = () => {
+    if (stopTimeoutRef.current !== null) {
+      clearTimeout(stopTimeoutRef.current)
+      stopTimeoutRef.current = null
+    }
+  }
+
+  const stopMediaStream = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      mediaStreamRef.current = null
+    }
+  }
+
+  useEffect(() => (
+    () => {
+      clearStopTimeout()
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop()
+      }
+      stopMediaStream()
+    }
+  ), [])
+
+  async function handleTranscription(audioBlob) {
+    setVoiceState("transcribing")
+    setVoiceError(null)
+
+    try {
+      const response = await transcribeFarmerSpeech(audioBlob)
+      const transcript = response.transcript || ""
+      const text = transcript.toLowerCase()
+
+      let cropType = form.cropType
+      let areaValue = form.areaValue
+      let areaUnit = form.areaUnit
+      let plantingDate = form.plantingDate
+
+      if (text.includes("corn") || text.includes("jagung")) cropType = "Sweet Corn"
+      else if (text.includes("paddy") || text.includes("padi") || text.includes("mr269")) cropType = "Premium Paddy MR269"
+      else if (text.includes("chili") || text.includes("cili")) cropType = "Chili"
+
+      if (text.includes("today") || text.includes("hari ini")) {
+        plantingDate = new Date().toISOString().split("T")[0]
+      } else if (text.includes("yesterday") || text.includes("semalam")) {
+        const d = new Date()
+        d.setDate(d.getDate() - 1)
+        plantingDate = d.toISOString().split("T")[0]
+      }
+
+      const areaMatch = text.match(/(\d+(?:\.\d+)?)\s*(hectare|acre|plot)/i)
+      if (areaMatch) {
+        areaValue = areaMatch[1]
+        areaUnit = areaMatch[2].toLowerCase() + "s"
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        cropType,
+        plantingDate,
+        areaValue,
+        areaUnit: ["hectares", "acres", "plots"].includes(areaUnit) ? areaUnit : prev.areaUnit,
+        inputSummary: transcript,
+      }))
+      setVoiceState("idle")
+    } catch (error) {
+      setVoiceState("error")
+      setVoiceError(error.message || "Unable to transcribe your recording right now.")
+    }
+  }
+
+  async function startRecording() {
+    if (!isVoiceSupported) {
+      return
+    }
+
+    setVoiceError(null)
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mimeType = getSupportedRecordingMimeType()
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream)
+
+      audioChunksRef.current = []
+      mediaStreamRef.current = stream
+      mediaRecorderRef.current = recorder
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onerror = () => {
+        clearStopTimeout()
+        stopMediaStream()
+        setVoiceState("error")
+        setVoiceError("Voice recording failed. You can still type.")
+      }
+
+      recorder.onstop = () => {
+        clearStopTimeout()
+        stopMediaStream()
+        const recordedBlob = new Blob(
+          audioChunksRef.current,
+          { type: recorder.mimeType || "audio/webm" },
+        )
+        audioChunksRef.current = []
+
+        if (!recordedBlob.size) {
+          setVoiceState("error")
+          setVoiceError("No speech was captured. Try recording again.")
+          return
+        }
+
+        void handleTranscription(recordedBlob)
+      }
+
+      recorder.start()
+      setVoiceState("recording")
+      stopTimeoutRef.current = setTimeout(() => {
+        if (recorder.state === "recording") {
+          recorder.stop()
+        }
+      }, MAX_RECORDING_MS)
+    } catch (error) {
+      stopMediaStream()
+      setVoiceState("error")
+      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+        setVoiceError("Microphone access was denied. You can still type.")
+        return
+      }
+      setVoiceError("Voice recording isn't available right now.")
+    }
+  }
+
+  function stopRecording() {
+    clearStopTimeout()
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop()
+    }
+  }
+
+  function handleVoiceButtonClick() {
+    if (isVoiceButtonDisabled) {
+      return
+    }
+
+    if (isRecording) {
+      stopRecording()
+      return
+    }
+
+    void startRecording()
+  }
+
+
+  const plantingDateValue = normalizePlantingDate(form.plantingDate)
+  const areaValueNumber = Number(form.areaValue)
+  const hasValidArea = Number.isFinite(areaValueNumber) && areaValueNumber > 0
   const isFormComplete = Boolean(
     form.cropType.trim() &&
-    plantingDate &&
+    plantingDateValue &&
     hasValidArea &&
     form.inputSummary.trim(),
   )
@@ -136,7 +327,7 @@ function RecordPlantingPage() {
   async function handleSubmit(event) {
     event.preventDefault()
 
-    if (!form.cropType.trim() || !plantingDate || !hasValidArea || !form.inputSummary.trim()) {
+    if (!form.cropType.trim() || !plantingDateValue || !hasValidArea || !form.inputSummary.trim()) {
       setSubmitState({
         status: "error",
         error: "Enter crop type, planting date, cultivation area, and inputs before generating the harvest listing.",
@@ -152,8 +343,8 @@ function RecordPlantingPage() {
     try {
       const listing = await createOrUpdatePlanting(flowIds.tradeId, {
         crop_type: form.cropType.trim(),
-        planting_date: plantingDate,
-        area_value: areaValue,
+        planting_date: plantingDateValue,
+        area_value: areaValueNumber,
         area_unit: form.areaUnit,
         input_summary: form.inputSummary.trim(),
       })
@@ -170,6 +361,14 @@ function RecordPlantingPage() {
       })
     }
   }
+
+  const voicePromptText = !isVoiceSupported
+    ? "Voice capture is not supported here. Type your details below."
+    : isRecording
+      ? "Recording now. Tap the mic again to stop."
+      : isTranscribing
+        ? "Transcribing your details..."
+        : "Tap the mic to dictate planting details."
 
   return (
     <PrototypePageFrame
@@ -198,6 +397,29 @@ function RecordPlantingPage() {
               Every data point you enter fuels our prediction engine, ensuring you connect with premium buyers weeks before the harvest.
             </p>
           </section>
+
+          {/* Voice Input Component matching FarmerVoiceInputPage */}
+          <div className="relative mb-10">
+            <div className="glass-card glow-edge rounded-[2rem] flex flex-col items-center justify-center border border-primary/10 py-6 relative overflow-hidden mx-auto">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary-container/5 blur-[40px] rounded-full"></div>
+              </div>
+
+              <div className="relative z-10 mb-4">
+                <div className={`absolute -inset-4 rounded-full blur-xl ${isRecording ? "animate-pulse bg-primary-container/20" : "bg-primary-container/10"}`}></div>
+                <button className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl relative active:scale-95 transition-transform duration-150 disabled:opacity-60 ${isRecording ? "bg-error voice-active" : "bg-primary"} ${isTranscribing ? "animate-pulse" : ""}`} disabled={isVoiceButtonDisabled} onClick={handleVoiceButtonClick} type="button">
+                  <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'wght' 500, 'FILL' 1" }}>
+                    {isRecording ? "stop" : "mic"}
+                  </span>
+                </button>
+              </div>
+
+              <div className="text-center relative z-10 px-4">
+                <p className="text-on-surface font-semibold text-sm leading-snug">{voicePromptText}</p>
+                {voiceError && <p className="text-error text-xs mt-2 font-medium">{voiceError}</p>}
+              </div>
+            </div>
+          </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
@@ -291,7 +513,7 @@ function RecordPlantingPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-end px-1">
-                <label className="font-label text-[13px] font-bold text-primary uppercase tracking-wider" htmlFor="inputs">Treatments &amp; Inputs</label>
+                <label className="font-label text-[13px] font-bold text-primary uppercase tracking-wider" htmlFor="inputs">Treatments & Inputs</label>
                 <span className="text-[11px] font-semibold text-primary/60 italic">Boosts listing premium</span>
               </div>
               <div className="relative premium-input-ring rounded-[2rem] overflow-hidden bg-surface-container-high border border-outline-variant/30">
@@ -321,7 +543,7 @@ function RecordPlantingPage() {
                   <p className="text-white text-[11px] font-bold tracking-[0.2em] uppercase opacity-90">Live Prediction Active</p>
                 </div>
                 <p className="text-white/80 text-[13px] font-medium leading-snug">
-                  AI is currently analyzing local soil moisture &amp; climate trends for your crop type.
+                  AI is currently analyzing local soil moisture & climate trends for your crop type.
                 </p>
               </div>
             </div>

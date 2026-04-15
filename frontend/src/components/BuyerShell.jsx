@@ -89,7 +89,7 @@ function BuyerShell({
 
           <Link
             className={navClasses(activeNav === "reservations")}
-            to={ROUTES.BUYER_RESERVATION_CONFIRMED}
+            to={ROUTES.BUYER_RESERVATIONS}
           >
             <span
               className="material-symbols-outlined"

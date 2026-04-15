@@ -1,15 +1,11 @@
-
-
 import { useNavigate } from "react-router-dom"
 import BuyerShell from "@/components/BuyerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { ROUTES } from "@/prototype/routes"
 import { useHarvest } from "../../context/HarvestContext"
-import { useState } from "react"
-import ReservationModal from "../../components/ReservationModal"
 
 const styles = [
-  "\n        .material-symbols-outlined {\n            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n        }\n        .glass-insight {\n            background: rgba(250, 249, 246, 0.7);\n            backdrop-filter: blur(12px);\n            -webkit-backdrop-filter: blur(12px);\n        }\n        .no-scrollbar::-webkit-scrollbar {\n            display: none;\n        }\n        .no-scrollbar {\n            -ms-overflow-style: none;\n            scrollbar-width: none;\n        }\n    "
+  "\n        .material-symbols-outlined {\n            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n        }\n    "
 ]
 
 const themeStyle = {
@@ -69,14 +65,14 @@ const themeStyle = {
   "--radius-xl": "3rem"
 }
 
-
-function BuyerMarketplacePage() {
+function BuyerReservationsPage() {
   const navigate = useNavigate();
   const { listings, loading, error, reservationStatus } = useHarvest();
 
-  // Projected harvests: filter listings with a 'projected' flag or show all for demo
-  const projectedHarvests = listings
-    .filter(l => l.projected || ['PROJECTED', 'projected', 'published', 'funds_secured'].includes(l.status))
+  // Filter listings that have been reserved by this user
+  // For demo, we just show anything that is 'funds_secured'
+  const reservedHarvests = listings
+    .filter(l => l.status === 'funds_secured' || reservationStatus[l.id]?.status === 'funds_secured')
     .map(l => ({
       ...l,
       title: l.title || l.listing_title || l.crop_label || l.crop,
@@ -87,30 +83,46 @@ function BuyerMarketplacePage() {
       region: l.region || 'Kedah',
     }));
 
-  const availableHarvests = listings.filter(l => !l.projected && !['PROJECTED', 'projected', 'published', 'funds_secured'].includes(l.status));
-
   return (
-    <PrototypePageFrame>
-      <BuyerShell>
+    <PrototypePageFrame
+      title="TaniTrade AI - My Reservations"
+      htmlClass=""
+      bodyClass="bg-background text-on-surface min-h-screen pb-14"
+      styles={styles}
+      themeStyle={themeStyle}
+    >
+      <BuyerShell activeNav="reservations" headerTitle="My Reservations">
         <main className="max-w-md mx-auto px-6 pt-6 pb-24 space-y-8">
           <section className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="font-headline font-bold text-xl text-on-surface tracking-tight">Projected Harvest Windows</h3>
-              <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container px-3 py-1.5 rounded-full">Projected</span>
-            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-primary leading-tight">
+              Reserved Supply
+            </h1>
+            <p className="text-on-surface-variant text-base leading-relaxed font-medium">
+              These are the future harvests you have secured. You can monitor their progress leading up to the harvest window.
+            </p>
+
             <div className="space-y-6">
-              {loading && <div className="text-center text-on-surface-variant">Loading listings...</div>}
+              {loading && <div className="text-center text-on-surface-variant">Loading your reservations...</div>}
               {error && <div className="text-center text-error">{error}</div>}
-              {(!loading && projectedHarvests.length === 0) && <div className="text-center text-on-surface-variant">No projected harvests.</div>}
-              {projectedHarvests.map(listing => (
+              {(!loading && reservedHarvests.length === 0) && (
+                <div className="text-center text-on-surface-variant p-8 bg-surface-container-low rounded-xl border border-outline-variant/20">
+                  <span className="material-symbols-outlined text-4xl mb-2 opacity-50">inventory_2</span>
+                  <p>You haven't reserved any supply yet.</p>
+                  <button 
+                    className="mt-4 px-6 py-2 bg-primary text-on-primary rounded-full text-sm font-bold shadow-md hover:scale-105 transition-all"
+                    onClick={() => navigate(ROUTES.BUYER_MARKETPLACE)}
+                  >
+                    Browse Marketplace
+                  </button>
+                </div>
+              )}
+              {reservedHarvests.map(listing => (
                 <div key={listing.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-outline-variant/20 transition-all hover:shadow-md relative">
-                  {/* Funds Secured badge if reserved */}
-                  {(reservationStatus[listing.id]?.status === 'funds_secured' || listing.status === 'funds_secured') && (
-                    <div className="absolute top-4 left-4 z-10 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-bold shadow border border-green-300 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px] text-green-700" data-icon="verified" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                      Funds Secured
-                    </div>
-                  )}
+                  <div className="absolute top-4 left-4 z-10 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-bold shadow border border-green-300 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-green-700" data-icon="verified" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    Funds Secured
+                  </div>
+                  
                   <div className="h-48 relative">
                     <img alt={listing.crop || "Harvest field"} className="w-full h-full object-cover" src={listing.imageUrl || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80"} />
                   </div>
@@ -136,34 +148,16 @@ function BuyerMarketplacePage() {
                       </div>
                     </div>
                     <button
-                      className={`w-full py-4 ${reservationStatus[listing.id]?.status === 'funds_secured' || listing.status === 'funds_secured' ? 'bg-surface-container-high text-primary' : 'bg-primary text-on-primary'} font-bold rounded-full hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md`}
+                      className="w-full py-4 bg-surface-container-high text-primary font-bold rounded-full hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md"
                       onClick={() => navigate(ROUTES.BUYER_FUTURE_SUPPLY_READINESS, { state: { listing } })}
                       type="button"
                     >
-                      <span className="material-symbols-outlined text-lg" data-icon={reservationStatus[listing.id]?.status === 'funds_secured' || listing.status === 'funds_secured' ? 'verified' : 'calendar_month'}>
-                        {reservationStatus[listing.id]?.status === 'funds_secured' || listing.status === 'funds_secured' ? 'verified' : 'calendar_month'}
-                      </span>
-                      <span>{reservationStatus[listing.id]?.status === 'funds_secured' || listing.status === 'funds_secured' ? 'View Details' : 'Secure Future Supply'}</span>
+                      <span className="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
+                      <span>Review Details</span>
                     </button>
                   </div>
                 </div>
               ))}
-            </div>
-          </section>
-
-          {/* AI Market Insight (static highlight) */}
-          <section className="glass-insight p-6 rounded-xl border border-white/40 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <span className="material-symbols-outlined text-6xl" data-icon="psychology">psychology</span>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 shrink-0 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined" data-icon="psychology" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
-              </div>
-              <div>
-                <h5 className="font-headline font-bold text-on-surface text-sm mb-1">AI Market Insight: Bullish</h5>
-                <p className="text-xs text-on-surface-variant leading-relaxed">Paddy demand is projected to rise 14% by Dec. Secure your March 2026 reservation now to lock in current rates.</p>
-              </div>
             </div>
           </section>
         </main>
@@ -172,4 +166,4 @@ function BuyerMarketplacePage() {
   );
 }
 
-export default BuyerMarketplacePage;
+export default BuyerReservationsPage;
