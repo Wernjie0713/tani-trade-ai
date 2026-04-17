@@ -70,6 +70,8 @@ const themeStyle = {
 }
 
 
+import { formatToDDMMYY } from "@/lib/utils"
+
 function BuyerMarketplacePage() {
   const navigate = useNavigate();
   const { listings, loading, error, reservationStatus } = useHarvest();
@@ -83,7 +85,7 @@ function BuyerMarketplacePage() {
       crop: l.crop || l.crop_code,
       estimatedVolume: l.estimatedVolume || (l.estimated_yield_min_kg ? `${l.estimated_yield_min_kg}kg - ${l.estimated_yield_max_kg}kg` : 'N/A'),
       price: l.price || (l.reservation_discount_pct ? `${l.reservation_discount_pct}% off` : 'N/A'),
-      harvestWindow: l.harvestWindow || (l.harvest_window_start ? `${l.harvest_window_start} to ${l.harvest_window_end}` : 'N/A'),
+      harvestWindow: l.harvestWindow || (l.harvest_window_start ? `${formatToDDMMYY(l.harvest_window_start)} to ${formatToDDMMYY(l.harvest_window_end)}` : 'N/A'),
       region: l.region || 'Kedah',
     }));
 
@@ -92,7 +94,7 @@ function BuyerMarketplacePage() {
   return (
     <PrototypePageFrame>
       <BuyerShell>
-        <main className="max-w-md mx-auto px-6 pt-6 pb-24 space-y-8">
+        <main className="max-w-md mx-auto px-6 pt-6 pb-36 space-y-8">
           <section className="space-y-6">
             <div className="flex items-center justify-between px-1">
               <h3 className="font-headline font-bold text-xl text-on-surface tracking-tight">Projected Harvest Windows</h3>
@@ -153,15 +155,12 @@ function BuyerMarketplacePage() {
 
           {/* AI Market Insight (static highlight) */}
           <section className="glass-insight p-6 rounded-xl border border-white/40 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <span className="material-symbols-outlined text-6xl" data-icon="psychology">psychology</span>
-            </div>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 shrink-0 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                 <span className="material-symbols-outlined" data-icon="psychology" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
               </div>
               <div>
-                <h5 className="font-headline font-bold text-on-surface text-sm mb-1">AI Market Insight: Bullish</h5>
+                <h5 className="font-headline font-bold text-on-surface text-sm">AI Market Insight: Bullish</h5>
                 <p className="text-xs text-on-surface-variant leading-relaxed">Paddy demand is projected to rise 14% by Dec. Secure your March 2026 reservation now to lock in current rates.</p>
               </div>
             </div>

@@ -65,6 +65,8 @@ const themeStyle = {
   "--radius-xl": "3rem"
 }
 
+import { formatToDDMMYY } from "@/lib/utils"
+
 function BuyerReservationsPage() {
   const navigate = useNavigate();
   const { listings, loading, error, reservationStatus } = useHarvest();
@@ -79,7 +81,7 @@ function BuyerReservationsPage() {
       crop: l.crop || l.crop_code,
       estimatedVolume: l.estimatedVolume || (l.estimated_yield_min_kg ? `${l.estimated_yield_min_kg}kg - ${l.estimated_yield_max_kg}kg` : 'N/A'),
       price: l.price || (l.reservation_discount_pct ? `${l.reservation_discount_pct}% off` : 'N/A'),
-      harvestWindow: l.harvestWindow || (l.harvest_window_start ? `${l.harvest_window_start} to ${l.harvest_window_end}` : 'N/A'),
+      harvestWindow: l.harvestWindow || (l.harvest_window_start ? `${formatToDDMMYY(l.harvest_window_start)} to ${formatToDDMMYY(l.harvest_window_end)}` : 'N/A'),
       region: l.region || 'Kedah',
     }));
 

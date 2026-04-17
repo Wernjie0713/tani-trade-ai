@@ -74,7 +74,7 @@ const seededListing = {
   region: "Kedah South Cluster",
   yieldMinKg: 950,
   yieldMaxKg: 1200,
-  harvestWindow: "12 Jul - 28 Jul 2026",
+  harvestWindow: "12/07/26 - 28/07/26",
   qualityBand: "Grade A Premium",
   confidenceScore: 96,
   earlyIncentiveLabel: "5% reservation discount before sowing week ends",
