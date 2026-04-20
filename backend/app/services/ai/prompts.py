@@ -53,7 +53,8 @@ def build_listing_system_prompt() -> str:
         "You are TaniTrade AI generating one short buyer-facing note for a projected future supply listing. "
         "The numeric projection is already computed by the backend. "
         "Do not change any numbers or imply guaranteed harvest volume. "
-        "Keep wording premium but honest. Return plain text only."
+        "Keep wording premium but honest. "
+        "Return plain text ONLY. Do NOT use markdown, bolding (**), bullet points, or lists."
     )
 
 

@@ -17,7 +17,16 @@ from app.ai.prompts.harvest_prompts import (
     PROMPT_LISTING_DESCRIPTION_EN,
 )
 from app.services.ai.schemas import GeminiBarterItemExtraction, GeminiIntakeExtraction
-from app.services.ai.prompts import LISTING_PROMPT_VERSION, INTAKE_PROMPT_VERSION, PROPOSAL_PROMPT_VERSION, build_intake_system_prompt, build_intake_user_prompt, build_proposal_system_prompt, build_proposal_user_prompt
+from app.services.ai.prompts import (
+    INTAKE_PROMPT_VERSION,
+    LISTING_PROMPT_VERSION,
+    PROPOSAL_PROMPT_VERSION,
+    build_intake_system_prompt,
+    build_intake_user_prompt,
+    build_listing_system_prompt,
+    build_proposal_system_prompt,
+    build_proposal_user_prompt,
+)
 from app.services.catalog import (
     UNIT_ALIASES,
     crop_label,
@@ -206,27 +215,34 @@ class FarmerAiOrchestrator:
             )
 
         try:
+            # Map correct keys from planting_row and listing_payload
+            crop = planting_row.get("crop_label") or listing_payload.get("crop_label", "")
+            area = f"{planting_row.get('area_value', '')} {planting_row.get('area_unit', '')}".strip()
+            planting_date = planting_row.get("planting_date", "")
+            expected_harvest_date = listing_payload.get("harvest_window_start", "")
+            expected_yield_kg = f"{listing_payload.get('estimated_yield_min_kg', '')}-{listing_payload.get('estimated_yield_max_kg', '')}"
+
             # Use dual-language prompt
             if language == "bm":
                 user_prompt = PROMPT_LISTING_DESCRIPTION_BM.format(
-                    crop=listing_payload.get("crop", ""),
-                    area=listing_payload.get("area", ""),
-                    planting_date=listing_payload.get("planting_date", ""),
-                    expected_harvest_date=listing_payload.get("expected_harvest_date", ""),
-                    expected_yield_kg=listing_payload.get("expected_yield_kg", "")
+                    crop=crop,
+                    area=area,
+                    planting_date=planting_date,
+                    expected_harvest_date=expected_harvest_date,
+                    expected_yield_kg=expected_yield_kg
                 )
             else:
                 user_prompt = PROMPT_LISTING_DESCRIPTION_EN.format(
-                    crop=listing_payload.get("crop", ""),
-                    area=listing_payload.get("area", ""),
-                    planting_date=listing_payload.get("planting_date", ""),
-                    expected_harvest_date=listing_payload.get("expected_harvest_date", ""),
-                    expected_yield_kg=listing_payload.get("expected_yield_kg", "")
+                    crop=crop,
+                    area=area,
+                    planting_date=planting_date,
+                    expected_harvest_date=expected_harvest_date,
+                    expected_yield_kg=expected_yield_kg
                 )
             result = self.client.generate_text(
                 operation="listing",
                 model=self.listing_model,
-                system_instruction="Generate a concise harvest listing note.",
+                system_instruction=build_listing_system_prompt(),
                 user_prompt=user_prompt,
                 temperature=0.4,
                 max_output_tokens=320,

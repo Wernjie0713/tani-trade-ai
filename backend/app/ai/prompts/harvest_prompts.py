@@ -17,7 +17,7 @@ Respond in JSON with expected_yield_kg and expected_harvest_date.
 """
 
 PROMPT_LISTING_DESCRIPTION_BM = """
-Tulis ringkasan penyenaraian hasil tuaian dalam Bahasa Melayu berdasarkan maklumat berikut:
+Tulis satu ayat ringkasan naratif untuk penyenaraian hasil tuaian dalam Bahasa Melayu berdasarkan maklumat di bawah. JANGAN gunakan format markdown, simbol bold (**), atau senarai berpoin.
 - Tanaman: {crop}
 - Kawasan: {area}
 - Tarikh tanam: {planting_date}
@@ -26,7 +26,7 @@ Tulis ringkasan penyenaraian hasil tuaian dalam Bahasa Melayu berdasarkan maklum
 """
 
 PROMPT_LISTING_DESCRIPTION_EN = """
-Write a concise harvest listing summary in English based on:
+Write a single-sentence narrative summary in English for a buyer-facing harvest listing based on the following details. Do NOT use markdown, bolding (**), or bullet points.
 - Crop: {crop}
 - Area: {area}
 - Planting date: {planting_date}
