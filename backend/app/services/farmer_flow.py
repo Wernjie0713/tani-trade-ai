@@ -576,17 +576,25 @@ class FarmerWorkflowService:
 
         interests = self.repo.list_listing_interests(listing_id)
         buyers = self.repo.get_profiles_by_ids([row["buyer_profile_id"] for row in interests])
-        planting_row = self.repo.get_planting_record(listing["planting_record_id"])
-        if planting_row is None or planting_row["farmer_profile_id"] != self.demo_farmer_profile_id:
+        
+        planting_id = listing.get("planting_record_id")
+        planting_row = None
+        if planting_id:
+            planting_row = self.repo.get_planting_record(planting_id)
+            if planting_row and planting_row["farmer_profile_id"] != self.demo_farmer_profile_id:
+                planting_row = None
+
+        if planting_row is None and listing["status"] not in ("projected",):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Planting record not found for this harvest listing.",
             )
+
         return self._build_harvest_listing_response(
             listing,
             interests,
             list(buyers.values()),
-            planting_row["id"],
+            planting_row["id"] if planting_row else None,
         )
 
     def publish_harvest_listing(self, listing_id: str) -> HarvestListingResponse:
@@ -594,17 +602,23 @@ class FarmerWorkflowService:
         if listing is None or listing["farmer_profile_id"] != self.demo_farmer_profile_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Harvest listing not found.")
 
-        planting_row = self.repo.get_planting_record(listing["planting_record_id"])
-        if planting_row is None or planting_row["farmer_profile_id"] != self.demo_farmer_profile_id:
+        planting_id = listing.get("planting_record_id")
+        planting_row = None
+        if planting_id:
+            planting_row = self.repo.get_planting_record(planting_id)
+            if planting_row and planting_row["farmer_profile_id"] != self.demo_farmer_profile_id:
+                planting_row = None
+
+        if planting_row is None and listing["status"] not in ("projected",):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Planting record not found for this harvest listing.",
             )
 
-        if listing["status"] not in {"draft", "published"}:
+        if listing["status"] not in {"draft", "published", "projected"}:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Only draft or published listings can be managed from this screen.",
+                detail="Only draft, projected, or published listings can be managed from this screen.",
             )
 
         published_at = listing.get("published_at") or datetime.now(tz=timezone.utc).isoformat()
@@ -623,7 +637,10 @@ class FarmerWorkflowService:
             },
         )
 
-        trade = self.repo.get_trade(planting_row["trade_id"])
+        trade = None
+        if planting_row and planting_row.get("trade_id"):
+            trade = self.repo.get_trade(planting_row["trade_id"])
+        
         if trade is not None:
             self.repo.update_barter_request(trade["request_id"], {"status": "published"})
 
@@ -633,7 +650,7 @@ class FarmerWorkflowService:
             listing,
             interests,
             list(buyers.values()),
-            planting_row["id"],
+            planting_row["id"] if planting_row else None,
         )
 
     def _require_demo_farmer(self) -> dict[str, Any]:
@@ -946,7 +963,7 @@ class FarmerWorkflowService:
         listing_row: dict[str, Any],
         interest_rows: list[dict[str, Any]],
         buyer_rows: list[dict[str, Any]],
-        planting_record_id: str,
+        planting_record_id: str | None,
     ) -> HarvestListingResponse:
         buyer_lookup = {buyer["id"]: buyer for buyer in buyer_rows}
         buyer_previews = [
@@ -983,6 +1000,8 @@ class FarmerWorkflowService:
             buyer_previews=buyer_previews,
             status=listing_row["status"],
             published_at=self._coerce_datetime(listing_row["published_at"]) if listing_row.get("published_at") else None,
+            reserved_by=listing_row.get("reserved_by"),
+            reserved_quantity=listing_row.get("reserved_quantity"),
         )
 
     def _build_match_rationale(self, counterparty_name: str, offered_item_name: str, have_item_name: str) -> str:

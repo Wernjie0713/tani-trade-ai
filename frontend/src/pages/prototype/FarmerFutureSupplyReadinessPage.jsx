@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom"
 
 import FarmerShell from "@/components/FarmerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
+import MarketContextSidebar from "@/components/MarketContextSidebar"
 import { useFarmerFlow } from "@/context/FarmerFlowContext"
 import { getHarvestListing, publishHarvestListing } from "@/lib/farmerApi"
 import {
@@ -134,7 +135,7 @@ function FarmerFutureSupplyReadinessPage() {
   const listing = screenState.data
   const publishButtonLabel = publishState.status === "loading"
     ? "Publishing Listing..."
-    : listing?.status === "published"
+    : (listing?.status === "published" || listing?.status === "funds_secured")
       ? "View Published Listing"
       : "Publish Listing"
 
@@ -143,7 +144,7 @@ function FarmerFutureSupplyReadinessPage() {
       return
     }
 
-    if (listing.status === "published") {
+    if (listing.status === "published" || listing.status === "funds_secured") {
       navigate(ROUTES.FARMER_LISTING_PUBLISHED)
       return
     }
@@ -183,10 +184,10 @@ function FarmerFutureSupplyReadinessPage() {
     >
       <FarmerShell
         activeNav="harvest"
-        containerClassName="max-w-2xl"
+        containerClassName="max-w-md"
         headerTitle="Harvest Listing"
       >
-        <main className="max-w-2xl mx-auto px-6 pt-6 pb-24 space-y-8">
+        <main className="max-w-md mx-auto px-6 pt-6 pb-24 space-y-8">
           <section className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black tracking-widest uppercase border border-primary/20">
               <span
@@ -350,6 +351,10 @@ function FarmerFutureSupplyReadinessPage() {
                     "This is the listing preview buyers will see. It uses your recorded planting inputs, seeded crop baselines, and estimated harvest timing. Final availability still depends on the real harvest."
                   </p>
                 </div>
+              </section>
+
+              <section>
+                <MarketContextSidebar cropName={listing.crop_label} />
               </section>
             </>
           )}

@@ -123,7 +123,7 @@ function FarmerListingPublishedPage() {
     return <Navigate replace to={ROUTES.FARMER_FUTURE_SUPPLY_READINESS} />
   }
 
-  if (screenState.status === "success" && screenState.data?.status !== "published") {
+  if (screenState.status === "success" && screenState.data?.status !== "published" && screenState.data?.status !== "funds_secured") {
     return <Navigate replace to={ROUTES.FARMER_FUTURE_SUPPLY_READINESS} />
   }
 
@@ -142,7 +142,7 @@ function FarmerListingPublishedPage() {
         backTo={ROUTES.FARMER_FUTURE_SUPPLY_READINESS}
         headerTitle="Listing Published"
       >
-        <main className="mx-auto flex max-w-2xl flex-col gap-8 px-6 pb-24 pt-6">
+        <main className="mx-auto flex max-w-md flex-col gap-8 px-6 pb-24 pt-6">
           <section className="space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -198,10 +198,17 @@ function FarmerListingPublishedPage() {
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
                           Live Status
                         </p>
-                        <p className="mt-1 flex items-center gap-2 text-sm font-extrabold text-primary-fixed">
-                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]"></span>
-                          Published to Buyer Marketplace
-                        </p>
+                        {listing.status === "funds_secured" ? (
+                          <p className="mt-1 flex items-center gap-2 text-sm font-extrabold text-green-400">
+                            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]"></span>
+                            Funds Secured (Reserved)
+                          </p>
+                        ) : (
+                          <p className="mt-1 flex items-center gap-2 text-sm font-extrabold text-primary-fixed">
+                            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]"></span>
+                            Published to Buyer Marketplace
+                          </p>
+                        )}
                       </div>
                       <div className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3">
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
@@ -214,17 +221,31 @@ function FarmerListingPublishedPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[1.8rem] border border-primary/20 bg-primary/10 px-5 py-4 text-right">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary-fixed/70">
-                      Reservation Reach
-                    </p>
-                    <p className="mt-1 font-headline text-3xl font-black text-primary-fixed">
-                      {listing.buyer_interest_count}
-                    </p>
-                    <p className="text-xs font-semibold text-white/65">
-                      seeded buyer signals attached
-                    </p>
-                  </div>
+                  {listing.status === "funds_secured" && listing.reserved_by ? (
+                    <div className="rounded-[1.8rem] border border-green-500/30 bg-green-500/10 px-5 py-4 text-right">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-green-300">
+                        Reserved By
+                      </p>
+                      <p className="mt-1 font-headline text-2xl font-black text-green-400">
+                        {listing.reserved_by}
+                      </p>
+                      <p className="text-sm font-semibold text-white/80 mt-1">
+                        RM {listing.reserved_quantity} secured
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-[1.8rem] border border-primary/20 bg-primary/10 px-5 py-4 text-right">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary-fixed/70">
+                        Reservation Reach
+                      </p>
+                      <p className="mt-1 font-headline text-3xl font-black text-primary-fixed">
+                        {listing.buyer_interest_count}
+                      </p>
+                      <p className="text-xs font-semibold text-white/65">
+                        seeded buyer signals attached
+                      </p>
+                    </div>
+                  )}
                 </div>
               </section>
 

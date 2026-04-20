@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 import BuyerShell from "@/components/BuyerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
@@ -67,6 +67,16 @@ const themeStyle = {
 
 function ReservationConfirmedPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const listing = location.state?.listing || {}
+  const reservation = location.state?.reservation || {}
+
+  const title = listing.cropLabel || listing.title || "Premium Paddy"
+  const quantity = reservation.quantity_kg || 100
+  const farmerName = listing.farmerName || "Pak Abu"
+  const farmerAvatarUrl = listing.farmerAvatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuCl4vXnJiWV34SGWKsxJ7n2U8yVTPBauSvym-GNe5JAXblgpePRAimYxJpKt2NUmUnZWzCk9myzSKLR2y72yl9CUvPSWOK-orwnCl-V4Eg05rE8lHJGt8DNqiV0Q-Xvf3rkfJwdvw72ee-kUgi3R_wEDx-Kk0BcpgXrdqe0dEDj7DqyIru7HW5BE2ZG8d4wDBpYPV6a5DhG2iOSsg0J6BcbBbboYxCWO3vcEhJoWV46BFQjkEbVodIsE-F72Q9C2o-D_o9jII8AaM8"
+  const harvestWindow = listing.harvestWindow || "January 2026"
 
   return (
     <PrototypePageFrame
@@ -109,13 +119,13 @@ function ReservationConfirmedPage() {
 
         <div className="bg-surface-container-low rounded-lg p-8 border border-outline-variant/30">
         <span className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2 block">Reserved Allocation</span>
-        <h3 className="font-headline font-bold text-2xl text-primary mb-1">Premium Paddy</h3>
-        <p className="text-on-surface-variant font-medium mb-6">100kg • Commitment Locked</p>
+        <h3 className="font-headline font-bold text-2xl text-primary mb-1">{title}</h3>
+        <p className="text-on-surface-variant font-medium mb-6">{quantity}kg • Commitment Locked</p>
         <div className="inline-flex items-center gap-4 bg-surface-container-lowest px-4 py-3 rounded-full border border-outline-variant/20 shadow-sm">
-        <img alt="Pak Abu Profile" className="w-10 h-10 rounded-full object-cover" data-alt="Portrait of an elderly Southeast Asian male farmer with a kind smile and sun-weathered skin wearing a traditional hat, blurred rice field background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl4vXnJiWV34SGWKsxJ7n2U8yVTPBauSvym-GNe5JAXblgpePRAimYxJpKt2NUmUnZWzCk9myzSKLR2y72yl9CUvPSWOK-orwnCl-V4Eg05rE8lHJGt8DNqiV0Q-Xvf3rkfJwdvw72ee-kUgi3R_wEDx-Kk0BcpgXrdqe0dEDj7DqyIru7HW5BE2ZG8d4wDBpYPV6a5DhG2iOSsg0J6BcbBbboYxCWO3vcEhJoWV46BFQjkEbVodIsE-F72Q9C2o-D_o9jII8AaM8" />
+        <img alt={`${farmerName} Profile`} className="w-10 h-10 rounded-full object-cover" data-alt="Portrait of an elderly Southeast Asian male farmer with a kind smile and sun-weathered skin wearing a traditional hat, blurred rice field background" src={farmerAvatarUrl} />
         <div className="pr-2">
         <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Your Partner Farmer</p>
-        <p className="font-bold text-primary">Pak Abu</p>
+        <p className="font-bold text-primary">{farmerName}</p>
         </div>
         </div>
         </div>
@@ -126,7 +136,7 @@ function ReservationConfirmedPage() {
         </div>
         <div>
         <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Est. Harvest</span>
-        <p className="font-bold text-on-surface">January 2026</p>
+        <p className="font-bold text-on-surface">{harvestWindow}</p>
         </div>
         </div>
 
@@ -143,7 +153,7 @@ function ReservationConfirmedPage() {
         <div className="w-full bg-surface-container-low rounded-lg p-6 flex items-start gap-4 border border-outline-variant/10">
         <span className="material-symbols-outlined text-secondary mt-1">handshake</span>
         <p className="text-sm text-on-surface-variant leading-relaxed italic">
-                            "You're more than a buyer; you're a steward of this land. We'll send regular updates on Pak Abu's progress as the grain matures."
+                            "You're more than a buyer; you're a steward of this land. We'll send regular updates on {farmerName}'s progress as the crop matures."
                         </p>
         </div>
         </div>

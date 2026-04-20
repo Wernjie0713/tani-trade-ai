@@ -1,10 +1,13 @@
+from app.api.routes.health import router as health_router
 from fastapi import APIRouter
 
 from app.api.routes.demo import router as demo_router
 from app.api.routes.farmer import router as farmer_router
-from app.api.routes.health import router as health_router
+
+from app.api.routes.harvest import router as harvest_router
 
 api_router = APIRouter()
 api_router.include_router(demo_router)
 api_router.include_router(farmer_router)
 api_router.include_router(health_router)
+api_router.include_router(harvest_router)

@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import logging
 
 import httpx
@@ -9,7 +12,9 @@ from google.api_core.exceptions import GoogleAPICallError
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_ai_file_logging
+import os
 
+print("GOOGLE_APPLICATION_CREDENTIALS:", os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
 settings = get_settings()
 configure_ai_file_logging(settings)
 logger = logging.getLogger("uvicorn.error")

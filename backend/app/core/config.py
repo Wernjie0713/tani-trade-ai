@@ -37,7 +37,8 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        return [self.frontend_url]
+        # Allow all origins for local development
+        return ["*"]
 
     @property
     def firebase_credentials_file(self) -> Path | None:

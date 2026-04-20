@@ -1,9 +1,12 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
+import { useState } from "react"
 
 import BuyerShell from "@/components/BuyerShell"
 import PrototypePageFrame from "@/components/PrototypePageFrame"
 import { formatConfidence, formatNumber } from "@/lib/farmerFlow"
 import { ROUTES } from "@/prototype/routes"
+import { useHarvest } from "../../context/HarvestContext"
+import ReservationModal from "../../components/ReservationModal"
 
 const styles = [
   "\n      .material-symbols-outlined {\n        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;\n      }\n      body {\n        font-family: 'Inter', sans-serif;\n        background-color: #FAF9F6;\n      }\n      h1, h2, h3 {\n        font-family: 'Manrope', sans-serif;\n      }\n      .shimmer-bg {\n        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);\n        background-size: 200% 100%;\n        animation: shimmer 2s infinite;\n      }\n      @keyframes shimmer {\n        0% { background-position: -200% 0; }\n        100% { background-position: 200% 0; }\n      }\n    ",
@@ -71,7 +74,7 @@ const seededListing = {
   region: "Kedah South Cluster",
   yieldMinKg: 950,
   yieldMaxKg: 1200,
-  harvestWindow: "12 Jul - 28 Jul 2026",
+  harvestWindow: "12/07/26 - 28/07/26",
   qualityBand: "Grade A Premium",
   confidenceScore: 96,
   earlyIncentiveLabel: "5% reservation discount before sowing week ends",
@@ -87,6 +90,34 @@ const seededListing = {
 
 function FutureSupplyReadinessPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { reserveListing, reservationStatus } = useHarvest()
+  const [modalOpen, setModalOpen] = useState(false)
+
+  // Use the listing passed from the previous page, or fallback to the seeded default
+  const passedListing = location.state?.listing || null
+  const displayListing = passedListing ? {
+    cropLabel: passedListing.crop_label || passedListing.title || seededListing.cropLabel,
+    region: passedListing.region || seededListing.region,
+    yieldMinKg: passedListing.estimated_yield_min_kg || passedListing.estimatedVolume?.replace('kg', '').split(' - ')[0] || seededListing.yieldMinKg,
+    yieldMaxKg: passedListing.estimated_yield_max_kg || passedListing.estimatedVolume?.replace('kg', '').split(' - ')[1] || seededListing.yieldMaxKg,
+    harvestWindow: passedListing.harvest_window_label || passedListing.harvestWindow || seededListing.harvestWindow,
+    qualityBand: passedListing.quality_band || seededListing.qualityBand,
+    confidenceScore: passedListing.confidence_score || seededListing.confidenceScore,
+    earlyIncentiveLabel: passedListing.early_incentive_label || seededListing.earlyIncentiveLabel,
+    reservationDeposit: passedListing.price ? `RM ${passedListing.price}` : seededListing.reservationDeposit,
+    listingNote: passedListing.listing_note || seededListing.listingNote,
+    farmerName: passedListing.farmerName || seededListing.farmerName,
+    farmerAvatarUrl: passedListing.farmerAvatarUrl || seededListing.farmerAvatarUrl,
+    buyerInterestCount: passedListing.buyer_interest_count || seededListing.buyerInterestCount,
+    soilVitalityLabel: passedListing.soil_vitality_label || seededListing.soilVitalityLabel,
+    yieldProbabilityLabel: passedListing.yield_probability_label || seededListing.yieldProbabilityLabel,
+    imageUrl: passedListing.imageUrl || "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80",
+    id: passedListing.id,
+    status: passedListing.status
+  } : seededListing
+
+  const isSecured = passedListing && (reservationStatus[passedListing.id]?.status === 'funds_secured' || displayListing.status === 'funds_secured')
 
   return (
     <PrototypePageFrame
@@ -124,25 +155,25 @@ function FutureSupplyReadinessPage() {
           <div className="relative bg-surface-container-lowest rounded-xl overflow-hidden shadow-2xl shadow-primary/5 flex flex-col border border-outline-variant/30">
             <div className="w-full h-72 relative overflow-hidden group">
               <img
-                alt={seededListing.cropLabel}
+                alt={displayListing.cropLabel}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                src="https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80"
+                src={displayListing.imageUrl}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-xs font-bold shadow-lg backdrop-blur-md">
-                  {seededListing.cropLabel}
+                  {displayListing.cropLabel}
                 </span>
-                <span className="bg-tertiary-container/90 text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1 backdrop-blur-md">
+                <span className={`${isSecured ? 'bg-green-100 text-green-800' : 'bg-tertiary-container/90 text-on-tertiary-container'} px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1 backdrop-blur-md`}>
                   <span className="material-symbols-outlined text-xs">verified</span>
-                  Reserved Supply Candidate
+                  {isSecured ? 'Funds Secured' : 'Reserved Supply Candidate'}
                 </span>
               </div>
               <div className="absolute top-4 right-4 rounded-full bg-white/85 px-4 py-2 shadow-lg">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary/70">
                   Reservation Lock
                 </p>
-                <p className="text-lg font-extrabold text-primary">{seededListing.reservationDeposit}</p>
+                <p className="text-lg font-extrabold text-primary">{displayListing.reservationDeposit}</p>
               </div>
             </div>
 
@@ -153,14 +184,14 @@ function FutureSupplyReadinessPage() {
                     Est. Harvest Yield
                   </p>
                   <h2 className="text-3xl font-black text-on-surface tracking-tighter">
-                    {formatNumber(seededListing.yieldMinKg)}kg - {formatNumber(seededListing.yieldMaxKg)}kg
+                    {formatNumber(displayListing.yieldMinKg)}kg - {formatNumber(displayListing.yieldMaxKg)}kg
                   </h2>
                 </div>
                 <div className="text-right space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">
                     Harvest Window
                   </p>
-                  <p className="font-bold text-lg text-on-surface">{seededListing.harvestWindow}</p>
+                  <p className="font-bold text-lg text-on-surface">{displayListing.harvestWindow}</p>
                 </div>
               </div>
 
@@ -169,13 +200,13 @@ function FutureSupplyReadinessPage() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">
                     Region
                   </p>
-                  <p className="mt-2 text-base font-bold text-on-surface">{seededListing.region}</p>
+                  <p className="mt-2 text-base font-bold text-on-surface">{displayListing.region}</p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">
                     Quality Band
                   </p>
-                  <p className="mt-2 text-base font-bold text-on-surface">{seededListing.qualityBand}</p>
+                  <p className="mt-2 text-base font-bold text-on-surface">{displayListing.qualityBand}</p>
                 </div>
               </div>
 
@@ -192,12 +223,12 @@ function FutureSupplyReadinessPage() {
                       Buyer Incentive
                     </p>
                     <p className="text-sm font-bold text-on-tertiary-fixed-variant">
-                      {seededListing.earlyIncentiveLabel}
+                      {displayListing.earlyIncentiveLabel}
                     </p>
                   </div>
                 </div>
                 <p className="text-on-surface-variant leading-relaxed font-medium italic">
-                  "{seededListing.listingNote}"
+                  "{displayListing.listingNote}"
                 </p>
               </div>
 
@@ -205,15 +236,15 @@ function FutureSupplyReadinessPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30">
                     <img
-                      alt={seededListing.farmerName}
-                      src={seededListing.farmerAvatarUrl}
+                      alt={displayListing.farmerName}
+                      src={displayListing.farmerAvatarUrl}
                     />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-secondary">
                       Farmer Cluster
                     </p>
-                    <p className="font-bold text-on-surface">{seededListing.farmerName}</p>
+                    <p className="font-bold text-on-surface">{displayListing.farmerName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -222,7 +253,7 @@ function FutureSupplyReadinessPage() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                   </span>
                   <span className="text-[11px] font-bold text-primary tracking-wide">
-                    {seededListing.buyerInterestCount} BUYERS TRACKING
+                    {displayListing.buyerInterestCount} BUYERS TRACKING
                   </span>
                 </div>
               </div>
@@ -250,7 +281,7 @@ function FutureSupplyReadinessPage() {
                 <div className="text-right">
                   <div className="bg-primary/20 px-3 py-1 rounded-full border border-primary/40 mb-1">
                     <span className="text-primary-fixed font-black text-[11px] tracking-tight">
-                      {formatConfidence(seededListing.confidenceScore)}% CONFIDENCE
+                      {formatConfidence(displayListing.confidenceScore)}% CONFIDENCE
                     </span>
                   </div>
                   <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest">
@@ -265,7 +296,7 @@ function FutureSupplyReadinessPage() {
                     Soil Vitality
                   </p>
                   <p className="text-sm font-bold flex items-center gap-2">
-                    {seededListing.soilVitalityLabel}
+                    {displayListing.soilVitalityLabel}
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
                   </p>
                 </div>
@@ -274,7 +305,7 @@ function FutureSupplyReadinessPage() {
                     Yield Probability
                   </p>
                   <p className="text-sm font-bold text-tertiary-fixed">
-                    {seededListing.yieldProbabilityLabel}
+                    {displayListing.yieldProbabilityLabel}
                   </p>
                 </div>
               </div>
@@ -288,13 +319,29 @@ function FutureSupplyReadinessPage() {
           <section className="space-y-4 pt-4">
             <div className="flex flex-col gap-4">
               <button
-                className="w-full bg-primary text-on-primary py-5 rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3"
-                onClick={() => navigate(ROUTES.BUYER_RESERVATION_CONFIRMED)}
+                className={`w-full ${isSecured ? 'bg-surface-container-high text-primary' : 'bg-primary text-on-primary hover:scale-[1.01] active:scale-95 shadow-xl shadow-primary/20'} py-5 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-3`}
+                onClick={() => {
+                  if (!isSecured) {
+                    setModalOpen(true);
+                  }
+                }}
+                disabled={isSecured}
                 type="button"
               >
-                Reserve Supply
-                <span className="material-symbols-outlined text-xl">shopping_bag</span>
+                {isSecured ? 'Funds Secured' : 'Reserve Supply'}
+                <span className="material-symbols-outlined text-xl">{isSecured ? 'verified' : 'shopping_bag'}</span>
               </button>
+
+              {/* Reservation Modal added here */}
+              <ReservationModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onReserve={async (id, res) => {
+                  await reserveListing(displayListing.id, res);
+                  navigate(ROUTES.BUYER_RESERVATION_CONFIRMED, { state: { listing: displayListing, reservation: res } });
+                }}
+                listing={displayListing}
+              />
               <button
                 className="w-full bg-surface-container-highest text-on-surface py-5 rounded-full font-bold text-lg hover:bg-surface-container-high transition-all"
                 onClick={() => navigate(ROUTES.BUYER_MARKETPLACE)}

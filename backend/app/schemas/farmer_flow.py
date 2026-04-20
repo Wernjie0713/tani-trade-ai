@@ -158,7 +158,7 @@ class BuyerPreview(BaseModel):
 
 
 class HarvestListingResponse(BaseModel):
-    planting_record_id: str
+    planting_record_id: str | None = None
     harvest_listing_id: str
     crop_code: str
     crop_label: str
@@ -179,6 +179,8 @@ class HarvestListingResponse(BaseModel):
     buyer_previews: list[BuyerPreview]
     status: str
     published_at: datetime | None = None
+    reserved_by: str | None = None
+    reserved_quantity: int | None = None
 
 
 class SpeechTranscriptionResponse(BaseModel):
