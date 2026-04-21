@@ -1,50 +1,37 @@
 // API utility for harvest module endpoints
-// Assumes Vite proxy or .env config for API base URL
+// Uses the shared apiRequest helper so a single VITE_API_BASE_URL drives all
+// backend calls (prevents build-time env-var drift between API clients).
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { apiRequest } from "@/lib/api"
 
-export async function createHarvestListing(listing) {
-  const res = await fetch(`${API_BASE}/harvest/listings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export function createHarvestListing(listing) {
+  return apiRequest("/harvest/listings", {
+    method: "POST",
     body: JSON.stringify(listing),
-  });
-  if (!res.ok) throw new Error('Failed to create listing');
-  return await res.json();
+  })
 }
 
-export async function updateHarvestListing(listingId, data) {
-  const res = await fetch(`${API_BASE}/harvest/listings/${listingId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+export function updateHarvestListing(listingId, data) {
+  return apiRequest(`/harvest/listings/${listingId}`, {
+    method: "PUT",
     body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed to update listing');
-  return await res.json();
+  })
 }
 
-export async function listHarvestListings() {
-  const res = await fetch(`${API_BASE}/harvest/listings`);
-  if (!res.ok) throw new Error('Failed to fetch listings');
-  return await res.json();
+export function listHarvestListings() {
+  return apiRequest("/harvest/listings")
 }
 
-export async function reserveHarvestListing(listingId, reservation) {
-  const res = await fetch(`${API_BASE}/harvest/listings/${listingId}/reserve`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export function reserveHarvestListing(listingId, reservation) {
+  return apiRequest(`/harvest/listings/${listingId}/reserve`, {
+    method: "POST",
     body: JSON.stringify(reservation),
-  });
-  if (!res.ok) throw new Error('Failed to reserve listing');
-  return await res.json();
+  })
 }
 
-export async function postBuyerRequirement(requirement) {
-  const res = await fetch(`${API_BASE}/harvest/buyer-requirements`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export function postBuyerRequirement(requirement) {
+  return apiRequest("/harvest/buyer-requirements", {
+    method: "POST",
     body: JSON.stringify(requirement),
-  });
-  if (!res.ok) throw new Error('Failed to post requirement');
-  return await res.json();
+  })
 }

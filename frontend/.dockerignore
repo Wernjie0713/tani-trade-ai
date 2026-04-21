@@ -1,0 +1,13 @@
+node_modules
+dist
+dist-ssr
+npm-debug.log*
+.git
+.gitignore
+.vscode
+# Exclude local dev env (uses localhost). .env.production is intentionally
+# kept so Vite bakes the production backend URL into the bundle at build time.
+.env
+.env.local
+!.env.production
+!.env.example

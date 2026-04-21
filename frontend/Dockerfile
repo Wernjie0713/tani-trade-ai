@@ -9,8 +9,11 @@ RUN npm ci
 
 # Build the app
 COPY . .
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Production backend URL — hardcoded so Vite bakes it into the bundle at build time.
+# Change this value and redeploy if the backend URL ever changes.
+ENV VITE_API_BASE_URL=https://tanitrade-backend-272412134779.asia-southeast1.run.app/api/v1
+
 RUN npm run build
 
 # Production stage

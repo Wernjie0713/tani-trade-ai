@@ -8,5 +8,8 @@ frontend/node_modules/
 frontend/dist/
 *.log
 .env
-.env.*
+.env.local
+# Keep frontend/.env.production so Vite can bake the production backend URL
+# into the built bundle during `npm run build`.
+!frontend/.env.production
 backend/service-account.json
